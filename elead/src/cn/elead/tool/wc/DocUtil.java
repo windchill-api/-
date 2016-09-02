@@ -4964,6 +4964,8 @@ public class DocUtil implements RemoteAccess {
 	    	
 		}
 
+		
+		
 	public static void main(String[] args) throws RemoteException,
 			InvocationTargetException, WTException {
 		if (!RemoteMethodServer.ServerFlag) {
