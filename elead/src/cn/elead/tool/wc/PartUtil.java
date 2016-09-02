@@ -1583,14 +1583,40 @@ public class PartUtil implements RemoteAccess, Serializable {
 	}
     
 	public static void test() throws RemoteException, InvocationTargetException, WTException{
-		/*List<WTPart> list = getPartByNameStateTypeView("GOLF_CART","INWORK","wt.part.WTPart","");
+		List<WTPart> list = getPartListByStateView("INWORK","Design");
+		for (int i = 0; i < list.size(); i++) {
+			System.out.println(list.get(i));
+		}
+		removeUseLinkOfRef(getPartByNumber("GC000032"), DocUtil.getDocumentByNumber("0000000101"));
+		/*List<WTPart> list = getPartListByNumberState("GC000032", "INWORK");
 		for (int i = 0; i < list.size(); i++) {
 			System.out.println(list.get(i));
 		}*/
-		getNameByPart(getPartByNumber("GC000032"));
+		/*hasUsageLink(getPartByNumber("GC000032"), getPartMasterByNumber("GC000027"));
+		getWorkingCopyOfPart(getPartByNumber("GC000032"));*/
+		/*getNameByPart(getPartByNumber("GC000032"));
 		System.out.println(getPartMasterByNumber("GC000032"));
 		addReferenceDoc(getPartByNumber("GC000032"), DocUtil.getDocumentByNumber("0000000101"));
-	
+		getTypeByPart(getPartByNumber("GC000032"));*/
+		/*System.out.println(newPart("newPart-Name1", "newPart-Number1", "GC000020"));
+		deletePart(getPartByNumber("GC000020"));
+		updatePartNumber(getPartByNumber("GC000032"), "new-GC000032");
+		isCheckOutState(getPartByNumber("GC000032"));
+		isWorkingCopy(getPartByNumber("GC000032"));*/
+		/*System.out.println(getLifeCycleTemplate(getPartByNumber("GC000032")));
+		reSetLifeCycle(getPartByNumber("GC000032"), "RELEASED");*/
+		/*System.out.println(doCheckOut(getPartByNumber("GC000032")));
+		doCheckIn(getPartByNumber("GC000032"));*/
+		/*System.out.println(reviseWTPart(getPartByNumber("GC000032"), "asdfg"));
+		removeUseLink(getPartByNumber("GC000032"), getPartByNumber("1234"));
+		isPartNumberExist("GC000032");*/
+		/*System.out.println(getPartUsageLink(getPartByNumber("GC000032"), getPartMasterByNumber("GC000027")));
+		addReferenceDoc(getPartByNumber("GC000032"), DocUtil.getDocumentByNumber("0000000101"));
+		System.out.println(getLatestPartByMaster(getPartMasterByNumber("GC000032")));
+		updatePartNoAndName(getPartByNumber("GC000032"), "newName-GC000032","newNumber-GC000032");*/
+		//System.out.println(createUsageLink(getPartByNumber("GC000032"), getPartMasterByNumber("GC000030")));
+		/*System.out.println(findUsageLink(getPartByNumber("GC000032")));
+		removeAllUseLink(getPartByNumber("GC000032"));*/
 		//System.out.println("1----------------------"+getWorkingCopyOfPart(getPartByNumber("GC000001")));
 		//System.out.println("2----------------------"+getWorkingCopyOfPart(getPartByNumber("asdfd")));
 		//createUsageLink(getPartByNumber("GC000001"),getPartMasterByNumber("1234"));
@@ -1600,10 +1626,12 @@ public class PartUtil implements RemoteAccess, Serializable {
 		addDescribeDoc(getPartByNumber("GC000032"), DocUtil.getDocumentByNumber("0000000101"));
 		System.out.println(getPartDescribeLink(getPartByNumber("GC000032"), DocUtil.getDocumentByNumber("0000000101")));*/
 		//System.out.println(hasUsageLink(getPartByNumber("GC000032"),getPartMasterByNumber("GC000030")));
-		/*List<WTPart> list = getChildrenByParent(getPartByNumber("GC000001"));
-		for (int i = 0; i < list.size(); i++) {
-			System.out.println("1-----------------------"+list.get(i));
+		/*List<WTPart> list1 = getParentsByView(getPartByNumber("GC000027"), "Design");
+		for (int i = 0; i < list1.size(); i++) {
+			System.out.println("1-----------------------"+list1.get(i));
 		}*/
+		//removeUseLinkOfRef(getPartByNumber("GC000027"), doc);
+		
 	}
 	
 	public static void main(String[] args) throws RemoteException, InvocationTargetException, WTException{
