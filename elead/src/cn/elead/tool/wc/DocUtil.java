@@ -131,6 +131,7 @@ import wt.vc.Mastered;
 import wt.vc.VersionControlException;
 import wt.vc.VersionControlHelper;
 import wt.vc.Versioned;
+import wt.vc.config.ConfigHelper;
 import wt.vc.config.IteratedOrderByPrimitive;
 import wt.vc.config.LatestConfigSpec;
 import wt.vc.config.VersionedOrderByPrimitive;
@@ -515,7 +516,7 @@ public class DocUtil implements RemoteAccess {
 	 * @throws WTException
 	 *             Windchill exception
 	 */
-/*	public static void addPrimaryContent(WTDocument doc, String filePath,
+	public static void addPrimaryContent(WTDocument doc, String filePath,
 			String fileName) throws WTException {
 		try {
 			ContentHolder contentHolder = ContentHelper.service
@@ -538,7 +539,7 @@ public class DocUtil implements RemoteAccess {
 		addContent(doc, filePath, fileName, ContentRoleType.PRIMARY);
 	}
 	
-*/
+
 	
 	/**
 	 * deleteContentByFileName
@@ -548,7 +549,7 @@ public class DocUtil implements RemoteAccess {
 	 * @return
 	 * @throws WTException
 	 */
-	/*public static ContentHolder deleteContentByFileName(ContentHolder holder1,
+	public static ContentHolder deleteContentByFileName(ContentHolder holder1,
 			String fileName) throws WTException {
 		ContentHolder holder = holder1;
 		if (fileName == null) {
@@ -575,7 +576,7 @@ public class DocUtil implements RemoteAccess {
 		}
 		return holder;
 	}
-*/
+
 	/**
 	 * deleteContents
 	 * delete all contents about the doc include PrimaryContent
@@ -583,7 +584,7 @@ public class DocUtil implements RemoteAccess {
 	 * @return WTDocument
 	 * @throws WTException
 	 */
-	/*public static WTDocument deleteContents(WTDocument doc) throws WTException {
+	public static WTDocument deleteContents(WTDocument doc) throws WTException {
 		FormatContentHolder holder = null;
 		if (!RemoteMethodServer.ServerFlag) {
 			try {
@@ -613,7 +614,7 @@ public class DocUtil implements RemoteAccess {
 			return (WTDocument) holder;
 		}
 	}
-*/
+
 	/**
 	 * 
 	 * @param doc
@@ -625,7 +626,7 @@ public class DocUtil implements RemoteAccess {
 	 * @throws PropertyVetoException
 	 * @throws IOException
 	 */
-	/*public static WTDocument updatePrimaryContent(WTDocument doc,
+	public static WTDocument updatePrimaryContent(WTDocument doc,
 			String filePath, String fileName) throws WTException {
 		if (!RemoteMethodServer.ServerFlag) {
 			try {
@@ -667,7 +668,7 @@ public class DocUtil implements RemoteAccess {
 			return (WTDocument) ch;
 		}
 	}
-*/
+
 	/**
 	 * Get document by number version an diteration
 	 * 
@@ -677,7 +678,7 @@ public class DocUtil implements RemoteAccess {
 	 * @return
 	 * @throws WTException
 	 */
-/*	public static WTDocument getDocumentByNumberByVersionByIteration(
+	public static WTDocument getDocumentByNumberByVersionByIteration(
 			String number, String version, String iteration) throws WTException {
 		if (!RemoteMethodServer.ServerFlag) {
 			try {
@@ -736,7 +737,7 @@ public class DocUtil implements RemoteAccess {
 			}
 			return document;
 		}
-	}*/
+	}
 
 	/**
 	 * create wtdocument in windchill by name, container,folder and type type
@@ -1134,7 +1135,7 @@ public class DocUtil implements RemoteAccess {
 	 *             Failed to query WTDocument objects with the given parameters.
 	 * 
 	 */
-/*	public static List<WTDocument> queryWTDocument(String[] states,
+	public static List<WTDocument> queryWTDocument(String[] states,
 			String[] softTypes) throws WTException {
 		if (!RemoteMethodServer.ServerFlag) {
 			try {
@@ -1264,7 +1265,7 @@ public class DocUtil implements RemoteAccess {
 		String[] softTypes = (softType != null && !softType.trim().isEmpty()) ? new String[] { softType }
 				: null;
 		return queryWTDocument(states, softTypes);
-	}*/
+	}
 
 	/**
 	 * Queries EPMDocument objects.
@@ -1473,7 +1474,7 @@ public class DocUtil implements RemoteAccess {
 	 *             Failed to get the latest EPMDocument object by
 	 *             EPMDocumentMaster.
 	 */
-	/*public static EPMDocument getLatestEPMDoc(EPMDocumentMaster epmMaster)
+	public static EPMDocument getLatestEPMDoc(EPMDocumentMaster epmMaster)
 			throws WTException {
 		if (epmMaster != null) {
 			try {
@@ -1492,7 +1493,7 @@ public class DocUtil implements RemoteAccess {
 			}
 		}
 		return null;
-	}*/
+	}
 
 	/**
 	 * Rename EPMDocument object to the given new name.
@@ -1583,7 +1584,7 @@ public class DocUtil implements RemoteAccess {
 	 * @throws WTException
 	 */
 
-	/*public static String getPrimContDownloadURLByNumber(String number)
+	public static String getPrimContDownloadURLByNumber(String number)
 			throws WTException, java.beans.PropertyVetoException {
 
 		String url = null;
@@ -1620,7 +1621,7 @@ public class DocUtil implements RemoteAccess {
 			throw new WTException(e, e.getMessage());
 		}
 	}
-*/
+
 	/**
 	 * Deal with the special characters of fuzzy query value.(SQL Skills)
 	 * 
@@ -3020,8 +3021,8 @@ public class DocUtil implements RemoteAccess {
 				throw new WTException(e);
 			}
 		}
-/*
-		*//**
+
+		/**
 		 * check in wtdocument
 		 * 
 		 * @param wtdocument
@@ -3031,7 +3032,7 @@ public class DocUtil implements RemoteAccess {
 		 */
 		
 		
-		/*	public static WTDocument checkInWTDocument(WTDocument wtdocument1, String description) throws WTException
+			public static WTDocument checkInWTDocument(WTDocument wtdocument1, String description) throws WTException
 		{
 			WTDocument wtdocument = wtdocument1;
 			if (wtdocument == null)
@@ -3068,7 +3069,7 @@ public class DocUtil implements RemoteAccess {
 				throw new WTException(e);
 			}
 		}
-	*/	
+		
 		public static String getLifeCycleByWTDocument(WTDocument doc){
 			String lifecycle=doc.getLifeCycleState().toString();
 			return lifecycle;
@@ -3095,18 +3096,6 @@ public class DocUtil implements RemoteAccess {
 			return ass;
 		}
     
-		
-		
-		
-
-	
-
-   
-
-
-
-
-
 			/**
 			 * 通过编号查找文档
 			 *
@@ -3175,7 +3164,7 @@ public class DocUtil implements RemoteAccess {
 						wt.doc.WTDocument.class, true);
 				qs.appendSearchCondition(latest);
 				qr = PersistenceHelper.manager.find(qs);
-				LatestConfigSpec cfg = new LatestConfigSpec(); // add by chenxiao 2012-02-01 加入此语句真正筛选最新版本的文档
+				LatestConfigSpec cfg = new LatestConfigSpec(); 
 				QueryResult qr1 = cfg.process(qr);
 				while (qr1.hasMoreElements()) {
 					doc = (WTDocument) qr1.nextElement();
