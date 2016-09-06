@@ -7,6 +7,7 @@ import java.rmi.RemoteException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import cn.elead.wc.util.StringUtil;
 import wt.fc.PersistenceHelper;
 import wt.fc.QueryResult;
 import wt.inf.container.OrgContainer;
@@ -23,7 +24,6 @@ import wt.util.WTException;
 import wt.util.WTPropertyVetoException;
 
 public class OrganizationUtil implements RemoteAccess, Serializable {
-
 	/**
 	 * @author WangY
 	 */
@@ -34,7 +34,9 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	/**
 	 * judge whether organization is exist by name
 	 * @param name
-	 * @return
+	 * @return		if name is exist in windChill,return true
+	 * 				else if name is not exist inwindChill,return false
+	 * 				else if name is empty or null,return false
 	 */
 	@SuppressWarnings("deprecation")
 	public static boolean isWTOrganizationExistByName(String name) {
@@ -73,7 +75,9 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	/**
 	 * judge whether organization is exist by organization
 	 * @param name
-	 * @return
+	 * @return		if org is exist in windChill,return true
+	 * 				else if org is not exist inwindChill,return false
+	 * 				else if org is null,return false
 	 */
 	@SuppressWarnings("deprecation")
 	public static boolean isWTOrganizationExistByOrg(WTOrganization org) {
@@ -112,7 +116,9 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	/**
 	 * get organization by name
 	 * @param name
-	 * @return
+	 * @return		if name is exist in windChill,return organization object
+	 * 				else if name is not exist,return null
+	 * 				else if name is empty or name is null,return null
 	 */
 	@SuppressWarnings("deprecation")
 	public static WTOrganization getWTOrganization(String name) {
@@ -152,7 +158,9 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	/**
 	 * get organization container by name
 	 * @param name
-	 * @return
+	 * @return		if name is exist,return container
+	 * 				else if name is not exist,return null
+	 * 				else if name is empty or name is null,return null
 	 * @throws WTException
 	 */
 	@SuppressWarnings("deprecation")
@@ -192,7 +200,9 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	/**
 	 * create organization by name
 	 * @param name
-	 * @return
+	 * @return		if name is not exist in windChill,create organization and return this org
+	 * 				else if name is exist in windChill,there is nothing to do
+	 * 				else is name is empty or name is null,there is nothing to do
 	 */
 	@SuppressWarnings("deprecation")
 	public static WTOrganization createWTOrg(String name) {
@@ -233,6 +243,10 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	
 	/**
 	 * update organization by name
+	 * @param name
+	 * @param reName
+	 * 		if name is exist in windChill,reName is not exist in WindChill,and reName is not empty or null,update the org
+	 * 		else there is nothing to do
 	 */
 	public static void updateWTOrg(String name,String reName) {
 		boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
@@ -243,9 +257,10 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	                		new Object[] { name,reName });
 	          
 	        } else {
-		        if(!StringUtils.isEmpty(name) && isWTOrganizationExistByName(name)){
+		        if(!StringUtils.isEmpty(name)&& !StringUtil.isEmpty(reName)){
 		        	WTOrganization org = getWTOrganization(name);
-			        if (org != null) {
+		        	WTOrganization org1 = getWTOrganization(reName);
+			        if (org != null && org1==null) {
 			        	try{
 							org.setName(reName);
 				            PersistenceHelper.manager.save(org);
@@ -267,23 +282,42 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
     }
 	
 	public static void test() throws RemoteException, InvocationTargetException, WTException{
-		//updateWTOrg("plm-training","org1");
-		/*System.out.println(getOrgContainer("org1"));
-		System.out.println(getOrgContainer("asdga"));*/
-		/*System.out.println(isWTOrganizationExistByName("org1"));
-		System.out.println(isWTOrganizationExistByName("plm-training"));
-		System.out.println(isWTOrganizationExistByName("asdf"));*/
-		
-		/*System.out.println(isWTOrganizationExistByOrg(getWTOrganization("org1")));
-		System.out.println(isWTOrganizationExistByOrg(getWTOrganization("plm-training")));
-		System.out.println(isWTOrganizationExistByOrg(getWTOrganization("asdf")));*/
-		
-		System.out.println(createWTOrg("org10"));
-		System.out.println(createWTOrg("plm-training"));
-		
+//		System.out.println("/*********************isWTOrganizationExistByName********************/");
+//		System.out.println(isWTOrganizationExistByName("plm-training"));
+//		System.out.println(isWTOrganizationExistByName("asd123"));
+//		System.out.println(isWTOrganizationExistByName(""));
+//		System.out.println(isWTOrganizationExistByName(null));
+//		System.out.println("/*********************isWTOrganizationExistByName********************/");
+//		System.out.println(isWTOrganizationExistByOrg(getWTOrganization("plm-training")));
+//		System.out.println(isWTOrganizationExistByOrg(getWTOrganization("asd123")));
+//		System.out.println(isWTOrganizationExistByOrg(getWTOrganization("")));
+//		System.out.println(isWTOrganizationExistByOrg(getWTOrganization(null)));
+//		System.out.println("/*********************getWTOrganization********************/");
+//		System.out.println(getWTOrganization("plm-training"));
+//		System.out.println(getWTOrganization("asd"));
+//		System.out.println(getWTOrganization(""));
+//		System.out.println(getWTOrganization(null));
+//		System.out.println("/*********************getOrgContainer********************/");
+//		System.out.println(getOrgContainer("plm-training"));
+//		System.out.println(getOrgContainer("asd"));
+//		System.out.println(getOrgContainer(""));
+//		System.out.println(getOrgContainer(null));
+//		System.out.println("/*********************createWTOrg********************/");
+//		System.out.println(createWTOrg("newOrg-name1"));
+//		System.out.println(createWTOrg("plm-training"));
+//		System.out.println(createWTOrg(""));
+//		System.out.println(createWTOrg(null));
+//		System.out.println("/*********************updateWTOrg********************/");
+//		updateWTOrg("test_OR", "newTest_OR");
+//		updateWTOrg("org1", "plm-training");
+//		updateWTOrg("org10", "");
+//		updateWTOrg(null, "newTest_OR1");
 	}
 	
 	public static void main(String[] args) throws RemoteException, InvocationTargetException, WTException{
+		RemoteMethodServer r = RemoteMethodServer.getDefault();
+		r.setUserName("wcadmin");
+		r.setPassword("wcadmin");
 		if (!RemoteMethodServer.ServerFlag) {
 			RemoteMethodServer.getDefault().invoke("test", OrganizationUtil.class.getName(), null,
 					new Class[] {},

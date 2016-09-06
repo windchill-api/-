@@ -3,7 +3,6 @@ package cn.elead.tool.wc;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.rmi.RemoteException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,31 +17,25 @@ import wt.change2.WTChangeActivity2;
 import wt.change2.WTChangeIssue;
 import wt.change2.WTChangeOrder2;
 import wt.change2.WTChangeRequest2;
-import wt.doc.WTDocument;
-import wt.epm.EPMDocument;
 import wt.fc.Persistable;
 import wt.fc.PersistenceHelper;
 import wt.fc.QueryResult;
 import wt.fc.WTObject;
 import wt.fc.collections.WTArrayList;
 import wt.fc.collections.WTList;
-import wt.folder.Folder;
-import wt.folder.FolderEntry;
-import wt.folder.FolderHelper;
-import wt.lifecycle.LifeCycleManaged;
 import wt.lifecycle.LifeCycleServerHelper;
 import wt.lifecycle.State;
 import wt.log4j.LogR;
 import wt.method.RemoteAccess;
 import wt.method.RemoteMethodServer;
-import wt.part.WTPart;
+import wt.pds.StatementSpec;
 import wt.query.QuerySpec;
 import wt.query.SearchCondition;
+import wt.query.WhereExpression;
 import wt.session.SessionServerHelper;
 import wt.type.TypeDefinitionReference;
 import wt.type.TypedUtility;
 import wt.util.WTException;
-import wt.util.WTPropertyVetoException;
 
 public class ChangeUtil implements RemoteAccess,Serializable {
 	
@@ -54,56 +47,204 @@ public class ChangeUtil implements RemoteAccess,Serializable {
 	private static Logger logger = LogR.getLogger(CLASSNAME);
 	
 	/**
-     * create changeOrder
-     * 
-     * @param ecnType
-     * @param name
-     * @param folder
-     * @param changeNoticeComplexity
-     * @param description
-     * @param timestamp
-     * @param ibaMap
-     * @return
-     * @throws WTException
-     * @throws WTPropertyVetoException
-     */
-    public static WTChangeOrder2 createWTChangeOrder2(String ecnType, String name, Folder folder,
-            ChangeNoticeComplexity changeNoticeComplexity, String description, Timestamp timestamp){
-    	WTChangeOrder2 changeOrder = null;
-    	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+	 * judge whether issue exist by part number
+	 * @param issueNumber
+	 * @return	if issueNumber exist in windChill, return true;	such as: issueNumber = "00001"
+     * 				else return false;	such as: issueNumber = "asd" or issueNumber = ""  or issueNumber = null
+	 */
+    public static boolean isIssueExist(String issueNumber){
+    	 boolean flag = false;
+    	 boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+         try{
+ 	        if (!RemoteMethodServer.ServerFlag) {
+ 	                return (boolean) RemoteMethodServer.getDefault().invoke("isIssueExist", 
+ 	                		ChangeUtil.class.getName(), null, new Class[] { String.class},
+ 	                		new Object[] { issueNumber });
+ 	        } else {
+ 	        	try{
+ 	        		if(!StringUtils.isEmpty(issueNumber)){
+		 	        	QuerySpec qs = new QuerySpec(WTChangeIssue.class);
+						WhereExpression  we = new SearchCondition(WTChangeIssue.class,WTChangeIssue.NUMBER, SearchCondition.EQUAL, issueNumber);
+						qs.appendWhere(we,new int[] { 0 });
+						QueryResult qr = PersistenceHelper.manager.find((StatementSpec) qs);
+						if(qr.hasMoreElements())
+							flag = true;
+ 	        		}
+ 	        	}catch(WTException e){
+ 	        		logger.error(">>>>>"+e);
+ 	        	}
+ 	        }
+         } catch (RemoteException e) {
+             logger.error(e.getMessage(),e);
+         } catch (InvocationTargetException e) {
+         	logger.error(e.getMessage(),e);
+         } finally {
+             SessionServerHelper.manager.setAccessEnforced(enforce);
+         }
+         return flag;
+    }
+	
+    /**
+	 * judge whether issue exist by part number
+	 * @param ecrNumber
+	 * @return	if ecrNumber exist in windChill, return true;	such as: ecrNumber = "00001"
+     * 				else return false;	such as: ecrNumber = "asd" or ecrNumber = ""  or ecrNumber = null
+	 */
+    public static boolean isECRExist(String ecrNumber){
+    	 boolean flag = false;
+    	 boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+         try{
+ 	        if (!RemoteMethodServer.ServerFlag) {
+ 	                return (boolean) RemoteMethodServer.getDefault().invoke("isECRExist", 
+ 	                		ChangeUtil.class.getName(), null, new Class[] { String.class},
+ 	                		new Object[] { ecrNumber });
+ 	        } else {
+ 	        	try{
+ 	        		if(!StringUtils.isEmpty(ecrNumber)){
+		 	        	QuerySpec qs = new QuerySpec(WTChangeRequest2.class);
+						WhereExpression  we = new SearchCondition(WTChangeRequest2.class,WTChangeRequest2.NUMBER,
+								SearchCondition.EQUAL, ecrNumber);
+						qs.appendWhere(we,new int[] { 0 });
+						QueryResult qr = PersistenceHelper.manager.find((StatementSpec) qs);
+						if(qr.hasMoreElements())
+							flag = true;
+ 	        		}
+ 	        	}catch(WTException e){
+ 	        		logger.error(">>>>>"+e);
+ 	        	}
+ 	        }
+         } catch (RemoteException e) {
+             logger.error(e.getMessage(),e);
+         } catch (InvocationTargetException e) {
+         	logger.error(e.getMessage(),e);
+         } finally {
+             SessionServerHelper.manager.setAccessEnforced(enforce);
+         }
+         return flag;
+    }
+    
+	/**
+	 * judge whether ecn exist by part number
+	 * @param ecnNumber
+	 * @return	if ecnNumber exist in windChill, return true;	such as: ecnNumber = "00001"
+     * 				else return false;	such as: ecnNumber = "asd" or ecnNumber = ""  or ecnNumber = null
+	 */
+    public static boolean isECNExist(String ecnNumber){
+    	 boolean flag = false;
+    	 boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+         try{
+ 	        if (!RemoteMethodServer.ServerFlag) {
+ 	                return (boolean) RemoteMethodServer.getDefault().invoke("isECNExist", 
+ 	                		ChangeUtil.class.getName(), null, new Class[] { String.class},
+ 	                		new Object[] { ecnNumber });
+ 	        } else {
+ 	        	try{
+ 	        		if(!StringUtils.isEmpty(ecnNumber)){
+		 	        	QuerySpec qs = new QuerySpec(WTChangeOrder2.class);
+						WhereExpression  we = new SearchCondition(WTChangeOrder2.class,WTChangeOrder2.NUMBER, 
+								SearchCondition.EQUAL, ecnNumber);
+						qs.appendWhere(we,new int[] { 0 });
+						QueryResult qr = PersistenceHelper.manager.find((StatementSpec) qs);
+						if(qr.hasMoreElements())
+							flag = true;
+ 	        		}
+ 	        	}catch(WTException e){
+ 	        		logger.error(">>>>>"+e);
+ 	        	}
+ 	        }
+         } catch (RemoteException e) {
+             logger.error(e.getMessage(),e);
+         } catch (InvocationTargetException e) {
+         	logger.error(e.getMessage(),e);
+         } finally {
+             SessionServerHelper.manager.setAccessEnforced(enforce);
+         }
+         return flag;
+    }
+    
+    /**
+	 * judge whether eca exist by part number
+	 * @param ecaNumber
+	 * @return	if ecaNumber exist in windChill, return true;	such as: ecaNumber = "00061"
+     * 				else return false;	such as: ecaNumber = "asd" or ecaNumber = ""  or ecaNumber = null
+	 */
+    public static boolean isECAExist(String ecaNumber){
+    	 boolean flag = false;
+    	 boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+         try{
+ 	        if (!RemoteMethodServer.ServerFlag) {
+ 	                return (boolean) RemoteMethodServer.getDefault().invoke("isECNAxist", 
+ 	                		ChangeUtil.class.getName(), null, new Class[] { String.class},
+ 	                		new Object[] { ecaNumber });
+ 	        } else {
+ 	        	try{
+ 	        		if(!StringUtils.isEmpty(ecaNumber)){
+		 	        	QuerySpec qs = new QuerySpec(WTChangeActivity2.class);
+						WhereExpression  we = new SearchCondition(WTChangeActivity2.class,WTChangeActivity2.NUMBER, 
+								SearchCondition.EQUAL, ecaNumber);
+						qs.appendWhere(we,new int[] { 0 });
+						QueryResult qr = PersistenceHelper.manager.find((StatementSpec) qs);
+						if(qr.hasMoreElements())
+							flag = true;
+ 	        		}
+ 	        	}catch(WTException e){
+ 	        		logger.error(">>>>>"+e);
+ 	        	}
+ 	        }
+         } catch (RemoteException e) {
+             logger.error(e.getMessage(),e);
+         } catch (InvocationTargetException e) {
+         	logger.error(e.getMessage(),e);
+         } finally {
+             SessionServerHelper.manager.setAccessEnforced(enforce);
+         }
+         return flag;
+    }
+	
+    /**
+	 * judge whether WTObject exist in windChill
+	 * @param object
+	 * @return		if object exist in windChill, return true;
+     * 				else if object is not exist or object is null,return false;	
+	 */
+	public static boolean isChangeObjectExist(WTObject object){
+   	 boolean flag = false;
+   	 boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
         try{
 	        if (!RemoteMethodServer.ServerFlag) {
-	                return (WTChangeOrder2) RemoteMethodServer.getDefault().invoke("createWTChangeOrder2", 
-	                		ChangeUtil.class.getName(), null, new Class[] { String.class,String.class,Folder.class,
-	                	ChangeNoticeComplexity.class,String.class,Timestamp.class},
-	                		new Object[] { ecnType,name,folder,changeNoticeComplexity,description,timestamp });
+	                return (boolean) RemoteMethodServer.getDefault().invoke("isChangeObjectExist", 
+	                		ChangeUtil.class.getName(), null, new Class[] { WTObject.class},
+	                		new Object[] { object });
 	        } else {
-		    	try{
-		    		if(!StringUtils.isEmpty(ecnType) && ecnType.indexOf("wt.change2.WTChangeOrder2")!=-1 && 
-		    				changeNoticeComplexity!=null && (changeNoticeComplexity.toString().indexOf("BASIC")!=-1 ||
-		    						changeNoticeComplexity.toString().indexOf("SIMPLE")!=-1 || 
-		    						changeNoticeComplexity.toString().indexOf("COMPLEX")!=-1)){
-			    		changeOrder = WTChangeOrder2.newWTChangeOrder2();
-			    		if(!StringUtils.isEmpty(name)){
-			    			changeOrder.setName(name);
-			    		}
-				        TypeDefinitionReference typeDefinitionRef = TypedUtility.getTypeDefinitionReference(ecnType);
-				        changeOrder.setTypeDefinitionReference(typeDefinitionRef);
-				        if (!StringUtils.isEmpty(description)) {
-				            changeOrder.setDescription(description);
-				        }
-				        if (timestamp != null) {
-				            changeOrder.setNeedDate(timestamp);
-				        }
-				        changeOrder.setChangeNoticeComplexity(changeNoticeComplexity);
-				        if(folder!=null){
-				        	FolderHelper.assignLocation((FolderEntry) changeOrder, folder);
-				        }
-				        changeOrder = (WTChangeOrder2) ChangeHelper2.service.saveChangeOrder(changeOrder);
-		    		}
-		        } catch(Exception e){
-		        	logger.error(">>>>>"+e);
-		        }
+	        	try{
+	        		if(object!=null){
+	        			QuerySpec qs = null;
+	        			WhereExpression we = null;
+	        			if(object instanceof WTChangeIssue){
+	        				WTChangeIssue issue = (WTChangeIssue)object;
+	        				qs = new QuerySpec(WTChangeIssue.class);
+							we = new SearchCondition(WTChangeIssue.class,WTChangeIssue.NUMBER, SearchCondition.EQUAL, issue.getNumber());
+	        			}else if(object instanceof WTChangeRequest2){
+	        				WTChangeRequest2 ecr = (WTChangeRequest2)object;
+	        				qs = new QuerySpec(WTChangeRequest2.class);
+							we = new SearchCondition(WTChangeRequest2.class,WTChangeRequest2.NUMBER, SearchCondition.EQUAL, ecr.getNumber());
+	        			}else if(object instanceof WTChangeOrder2){
+	        				WTChangeOrder2 ecr = (WTChangeOrder2)object;
+	        				qs = new QuerySpec(WTChangeOrder2.class);
+							we = new SearchCondition(WTChangeOrder2.class,WTChangeOrder2.NUMBER, SearchCondition.EQUAL, ecr.getNumber());
+	        			}else if(object instanceof WTChangeActivity2){
+	        				WTChangeActivity2 ecr = (WTChangeActivity2)object;
+	        				qs = new QuerySpec(WTChangeActivity2.class);
+							we = new SearchCondition(WTChangeActivity2.class,WTChangeActivity2.NUMBER, SearchCondition.EQUAL, ecr.getNumber());
+	        			}
+						qs.appendWhere(we,new int[] { 0 });
+						QueryResult qr = PersistenceHelper.manager.find((StatementSpec) qs);
+						if(qr.hasMoreElements())
+							flag = true;
+	        		}
+	        	}catch(WTException e){
+	        		logger.error(">>>>>"+e);
+	        	}
 	        }
         } catch (RemoteException e) {
             logger.error(e.getMessage(),e);
@@ -112,48 +253,46 @@ public class ChangeUtil implements RemoteAccess,Serializable {
         } finally {
             SessionServerHelper.manager.setAccessEnforced(enforce);
         }
-        return changeOrder;
-    }
-	
+        return flag;
+   }
+    
 	/**
+	 * create changeOrder
+	 * @param ecnType
 	 * @param number
-     * @param name
-     * @param ecnType
-     * @param folder
-     * @param description
-     * @return
-     * @throws WTException
-     * @throws WTPropertyVetoException
-     */
-    public static WTChangeOrder2 createWTChangeOrder2(String number,String name, String ecnType, Folder folder, String description)
-    {
+	 * @param name
+	 * @param changeNoticeComplexity
+	 * @param description
+	 * @return		ecnType,name and changeNoticeComplexity is not exist,encTypy and changeNoticeComplexity has their form
+	 * 				if number is empty or number is exist in windChill,it can Automatically generated
+	 */
+    public static WTChangeOrder2 createWTChangeOrder2(String ecnType,String number, String name,
+            ChangeNoticeComplexity changeNoticeComplexity, String description){
     	WTChangeOrder2 changeOrder = null;
     	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
         try{
 	        if (!RemoteMethodServer.ServerFlag) {
 	                return (WTChangeOrder2) RemoteMethodServer.getDefault().invoke("createWTChangeOrder2", 
 	                		ChangeUtil.class.getName(), null, new Class[] { String.class,String.class,String.class,
-	                	Folder.class,String.class},
-	                		new Object[] { number,name,ecnType,folder,description});
+	                	ChangeNoticeComplexity.class,String.class},
+	                		new Object[] { ecnType,number,name,changeNoticeComplexity,description});
 	        } else {
 		    	try{
-		    		if(!StringUtils.isEmpty(ecnType) && ecnType.indexOf("wt.change2.WTChangeOrder2")!=-1){
-			    		changeOrder = WTChangeOrder2.newWTChangeOrder2();
-			    		if(!StringUtils.isEmpty(number)){
+		    		if(!StringUtils.isEmpty(ecnType) && !StringUtils.isEmpty(name) && ecnType.indexOf("wt.change2.WTChangeOrder2")!=-1 && 
+		    				changeNoticeComplexity!=null && (changeNoticeComplexity.toString().indexOf("BASIC")!=-1 ||
+		    						changeNoticeComplexity.toString().indexOf("SIMPLE")!=-1 || 
+		    						changeNoticeComplexity.toString().indexOf("COMPLEX")!=-1)){
+		    			changeOrder = WTChangeOrder2.newWTChangeOrder2();
+		    			TypeDefinitionReference typeDefinitionRef = TypedUtility.getTypeDefinitionReference(ecnType);
+				        changeOrder.setTypeDefinitionReference(typeDefinitionRef);
+			    		if(!StringUtils.isEmpty(number) && !isECNExist(number)){
 			    			changeOrder.setNumber(number);
 			    		}
-			    		if(!StringUtils.isEmpty(name)){
-			    			changeOrder.setName(name);
-			    		}
-				        TypeDefinitionReference typeDefinitionRef = TypedUtility.getTypeDefinitionReference(ecnType);
-				        changeOrder.setTypeDefinitionReference(typeDefinitionRef);
+			    		changeOrder.setName(name);
 				        if (!StringUtils.isEmpty(description)) {
 				            changeOrder.setDescription(description);
 				        }
-				        changeOrder.setChangeNoticeComplexity(ChangeNoticeComplexity.BASIC);
-				        if(folder!=null){
-				        	FolderHelper.assignLocation((FolderEntry) changeOrder, folder);
-				        }
+				        changeOrder.setChangeNoticeComplexity(changeNoticeComplexity);
 				        changeOrder = (WTChangeOrder2) ChangeHelper2.service.saveChangeOrder(changeOrder);
 		    		}
 		        } catch(Exception e){
@@ -170,385 +309,519 @@ public class ChangeUtil implements RemoteAccess,Serializable {
         return changeOrder;
     }
 	
-    public static WTChangeOrder2 createWTChangeOrder2ByNumber(String number,String name, String ecnType, Folder folder){
-    	return createWTChangeOrder2("", name, ecnType, folder, "");
-    }
-    
-    public static WTChangeOrder2 createWTChangeOrder2ByNumber(String number,String name, String ecnType,String description){
-    	return createWTChangeOrder2("", name, ecnType, null, "");
-    }
-    
-    public static WTChangeOrder2 createWTChangeOrder2ByNumber(String number,String name, String ecnType){
-    	return createWTChangeOrder2("", name, ecnType, null, "");
-    }
-    
-    public static WTChangeOrder2 createWTChangeOrder2ByName(String name, String ecnType, Folder folder, String description){
-    	return createWTChangeOrder2("", name, ecnType, folder, description);
-    }
-    
-    public static WTChangeOrder2 createWTChangeOrder2ByName(String name, String ecnType, String description){
-    	return createWTChangeOrder2("", name, ecnType, null, description);
-    }
-    
-    public static WTChangeOrder2 createWTChangeOrder2ByName(String name, String ecnType, Folder folder){
-    	return createWTChangeOrder2("", name, ecnType, folder,"");
-    }
-    
-    public static WTChangeOrder2 createWTChangeOrder2ByName(String name, String ecnType){
-    	return createWTChangeOrder2("", name, ecnType, null,"");
-    }
-    
     /**
-     * create the ECA and set the attribute
-     * 
-     * @param changeOrder
-     * @param econame
-     * @return
-     * @throws WTException
-     * @throws WTPropertyVetoException
+     * This method is used to get ECN by it's number.
+     * @param number
+     * @return		if number is exist,return ecn
+     * 				else if number is not exist,return null
+     * 				else if number is empty or number is null,return null
      */
-    /*public static WTChangeActivity2 createECA(WTChangeOrder2 changeOrder, String econame){
-        WTChangeActivity2 changeActivity = null;
-        try {
-            ChangeOrderIfc co = (ChangeOrderIfc) changeOrder;
-
-            changeActivity = WTChangeActivity2.newWTChangeActivity2(econame);
-            changeActivity.setDescription(econame);
-            changeActivity.setContainer(changeOrder.getContainer());
-            WTContainer container = changeOrder.getContainer();
-            WTContainerRef containerRef = WTContainerRef.newWTContainerRef(container);
-            Folder folder = FolderUtil.getFolder(containerRef, "/Default");
-            ChangeActivityIfc ca = (ChangeActivityIfc) changeActivity;
-            FolderHelper.assignLocation((FolderEntry) ca, folder);
-            //ca = (ChangeActivityIfc) PersistenceHelper.manager.save(ca);
-
-            IncludedIn2Delegate del = new IncludedIn2Delegate();
-            IncludedInIfc inc = (IncludedInIfc) del.getBinaryLink((ChangeItemIfc) co, ca);
-            inc = (IncludedInIfc) PersistenceHelper.manager.save(inc);
-            changeActivity = (WTChangeActivity2) ca;
-
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
+    @SuppressWarnings("deprecation")
+	public static WTChangeOrder2 getECNByNumber(String number){
+    	WTChangeOrder2 ecn = null;
+    	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (WTChangeOrder2) RemoteMethodServer.getDefault().invoke("getECNByNumber", 
+	                		ChangeUtil.class.getName(), null, new Class[] { String.class},
+	                		new Object[] {number});
+	        } else {
+		        try {
+		        	if(!StringUtils.isEmpty(number) && isECNExist(number)){
+			            QuerySpec criteria = new QuerySpec(WTChangeOrder2.class);
+			            criteria.appendSearchCondition(new SearchCondition(WTChangeOrder2.class, WTChangeOrder2.NUMBER,
+			                    SearchCondition.EQUAL, number, false));
+			            QueryResult results = PersistenceHelper.manager.find(criteria);
+			            if (results.hasMoreElements()) {
+			                ecn = (WTChangeOrder2) results.nextElement();
+			                
+			            }
+		        	}
+		        } catch (Exception e) {
+		            logger.error(e.getMessage(), e);
+		        }
+	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
         }
-        return changeActivity;
-    }*/
+        return ecn;
+    }
     
     /**
      * get all affected object from ECN
      * 
      * @param ecn
-     * @return
+     * @return	if ecn exist and ecn has before objects,return WTObjects
+     * 			else if ecn is not exist,return null
+     * 			else if ecn is empty or ecn is null,return null
      * @throws ChangeException2
      * @throws WTException
      */
-    public static List<WTObject> getChangeBefore1(WTChangeOrder2 ecn) throws ChangeException2, WTException {
+    @SuppressWarnings("unchecked")
+	public static List<WTObject> getChangeBefore(WTChangeOrder2 ecn) throws ChangeException2, WTException {
         List<WTObject> list = new ArrayList<WTObject>();
-        if(ecn!=null){
-	        QueryResult result = ChangeHelper2.service.getChangeActivities(ecn);
-	        while (result.hasMoreElements()) {
-	            WTChangeActivity2 activity = (WTChangeActivity2) result.nextElement();
-	            QueryResult res = ChangeHelper2.service.getChangeablesBefore(activity);
-	            while (res.hasMoreElements()) {
-	                WTObject object = (WTObject) res.nextElement();
-	                list.add(object);
-	            }
+        boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (List<WTObject>) RemoteMethodServer.getDefault().invoke("getChangeBefore1", 
+	                		ChangeUtil.class.getName(), null, new Class[] { WTChangeOrder2.class},
+	                		new Object[] { ecn});
+	        } else {
+		        if(ecn!=null && isChangeObjectExist(ecn)){
+			        QueryResult result = ChangeHelper2.service.getChangeActivities(ecn);
+			        while (result.hasMoreElements()) {
+			            WTChangeActivity2 activity = (WTChangeActivity2) result.nextElement();
+			            QueryResult res = ChangeHelper2.service.getChangeablesBefore(activity);
+			            while (res.hasMoreElements()) {
+			                WTObject object = (WTObject) res.nextElement();
+			                list.add(object);
+			            }
+			        }
+		        }
 	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
         }
         return list;
     }
     
-    public static List<LifeCycleManaged> getChangeBefore2(WTChangeOrder2 ecn){
-        List<LifeCycleManaged> result = new ArrayList<LifeCycleManaged>();
-        try{
-        	if(ecn!=null){
-		        QueryResult qr = ChangeHelper2.service.getLatestChangeActivity(ecn);
-		        logger.debug("eca size:" + qr.size());
-		        while (qr.hasMoreElements()) {
-		           WTChangeActivity2 eca = (WTChangeActivity2) qr.nextElement();
-		            QueryResult before = ChangeHelper2.service.getChangeablesBefore(eca);
-		            while (before.hasMoreElements()) {
-		                LifeCycleManaged lcm = (LifeCycleManaged) before.nextElement();
-		                result.add(lcm);
-		            }
-		        }
-        	}
-        }catch(Exception e){
-        	logger.error(">>>>>"+e);
-        }
-        return result;
-     }
     /**
      * get all resulting object from ECN
      * 
      * @param ecn
-     * @return
+     * @return		if ecn exist and ecn has after objects,return WTObjects
+     * 				else if ecn is not exist,return null
+     * 				else if ecn is empty or ecn is null,return null
      * @throws WTException
      */
-    public static List<WTObject> getChangeAfter1(WTChangeOrder2 ecn){
+    @SuppressWarnings("unchecked")
+	public static List<WTObject> getChangeAfter(WTChangeOrder2 ecn){
         List<WTObject> list = new ArrayList<WTObject>();
-        if(ecn!=null){
-	        try{
-	        	QueryResult result = ChangeHelper2.service.getChangeActivities(ecn);
-		        while (result.hasMoreElements()) {
-		            WTChangeActivity2 activity = (WTChangeActivity2) result.nextElement();
-		            QueryResult res = ChangeHelper2.service.getChangeablesAfter(activity);
-		            while (res.hasMoreElements()) {
-		                WTObject object = (WTObject) res.nextElement();
-		                list.add(object);
-		            }
+        boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (List<WTObject>) RemoteMethodServer.getDefault().invoke("getChangeAfter1", 
+	                		ChangeUtil.class.getName(), null, new Class[] { WTChangeOrder2.class},
+	                		new Object[] { ecn});
+	        } else {
+		        if(ecn!=null && isChangeObjectExist(ecn)){
+			        try{
+			        	QueryResult result = ChangeHelper2.service.getChangeActivities(ecn);
+				        while (result.hasMoreElements()) {
+				            WTChangeActivity2 activity = (WTChangeActivity2) result.nextElement();
+				            QueryResult res = ChangeHelper2.service.getChangeablesAfter(activity);
+				            while (res.hasMoreElements()) {
+				                WTObject object = (WTObject) res.nextElement();
+				                list.add(object);
+				            }
+				        }
+			        }catch(WTException e){
+			        	logger.error(">>>>>"+e);
+			        }
 		        }
-	        }catch(WTException e){
-	        	logger.error(">>>>>"+e);
 	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
         }
-        
         return list;
     }
     
-    
-    public static List<LifeCycleManaged> getChangeAfter2(WTChangeOrder2 ecn){
-        List<LifeCycleManaged> result = new ArrayList<LifeCycleManaged>();
+    /**
+     * get PR by issue Number
+     * @param number
+     * @return		if number is exist,return issue
+     * 				else if number is not exist,return null
+     * 				else if number is empty or number is null,return null
+     */
+    @SuppressWarnings("deprecation")
+	public static WTChangeIssue getPRByNumber(String number){
+    	WTChangeIssue pr = null;
+    	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
         try{
-        	if(ecn!=null){
-		        QueryResult qr = ChangeHelper2.service.getLatestChangeActivity(ecn);
-		        logger.debug("eca size:" + qr.size());
-		        while (qr.hasMoreElements()) {
-		            WTChangeActivity2 eca = (WTChangeActivity2) qr.nextElement();
-		            QueryResult afters = ChangeHelper2.service.getChangeablesAfter(eca);
-		            while (afters.hasMoreElements()) {
-		              LifeCycleManaged lcm = (LifeCycleManaged) afters.nextElement();
-		              result.add(lcm);
-		            }
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (WTChangeIssue) RemoteMethodServer.getDefault().invoke("getPRByNumber", 
+	                		ChangeUtil.class.getName(), null, new Class[] { String.class},
+	                		new Object[] {number});
+	        } else {
+		        try {
+		        	if(!StringUtils.isEmpty(number) && isECRExist(number)){
+			            QuerySpec criteria = new QuerySpec(WTChangeIssue.class);
+			            criteria.appendSearchCondition(new SearchCondition(WTChangeIssue.class, WTChangeIssue.NUMBER,
+			                    SearchCondition.EQUAL, number, false));
+			            QueryResult results = PersistenceHelper.manager.find(criteria);
+			            if (results.hasMoreElements()) {
+			                pr = (WTChangeIssue) results.nextElement();
+			            }
+		        	}
+		        } catch (Exception e) {
+		            logger.error(e.getMessage(), e);
 		        }
-        	}
-        }catch(Exception e){
-        	logger.error(">>>>>"+e);
+	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
         }
-        return result;
-     }
+        return pr;
+    }
+    
+    /**
+     * get ECA by Number
+     * @param number
+     * @return		if number is exist,return eca
+     * 				else if number is not exist,return null
+     * 				else if number is empty or number is null,return null
+     */
+    @SuppressWarnings("deprecation")
+	public static WTChangeActivity2 getECAByNumber(String number){
+    	WTChangeActivity2 eca = null;
+    	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (WTChangeActivity2) RemoteMethodServer.getDefault().invoke("getECAByNumber", 
+	                		ChangeUtil.class.getName(), null, new Class[] { String.class},
+	                		new Object[] {number});
+	        } else {
+		        try {
+		        	if(!StringUtils.isEmpty(number) && isECAExist(number)){
+			            QuerySpec criteria = new QuerySpec(WTChangeActivity2.class);
+			            criteria.appendSearchCondition(new SearchCondition(WTChangeActivity2.class, WTChangeActivity2.NUMBER,
+			                    SearchCondition.EQUAL, number, false));
+			            QueryResult results = PersistenceHelper.manager.find(criteria);
+			            if (results.hasMoreElements()) {
+			                eca = (WTChangeActivity2) results.nextElement();
+			            }
+		        	}
+		        } catch (Exception e) {
+		            logger.error(e.getMessage(), e);
+		        }
+	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
+        }
+        return eca;
+    }
+    
+    /**
+     * get ECR by number
+     * @param number
+     * @return		if number is exist,return ecr
+     * 				else if number is not exist,return null
+     * 				else if number is empty or number is null,return null
+     */
+    @SuppressWarnings("deprecation")
+	public static WTChangeRequest2 getECRByNumber(String number){
+    	WTChangeRequest2  ecr = null;
+    	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (WTChangeRequest2) RemoteMethodServer.getDefault().invoke("getECRByNumber", 
+	                		ChangeUtil.class.getName(), null, new Class[] { String.class},
+	                		new Object[] {number});
+	        } else {
+		        try {
+		        	if(!StringUtils.isEmpty(number) && isECRExist(number)){
+			            QuerySpec criteria = new QuerySpec(WTChangeRequest2.class);
+			            criteria.appendSearchCondition(new SearchCondition(WTChangeRequest2.class, WTChangeRequest2.NUMBER,
+			                    SearchCondition.EQUAL, number, false));
+			            QueryResult results = PersistenceHelper.manager.find(criteria);
+			            if (results.hasMoreElements()) {
+			            	ecr =  (WTChangeRequest2) results.nextElement();
+			            }
+		        	}
+		        } catch (Exception e) {
+		            logger.error(e.getMessage(), e);
+		        }
+	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
+        }
+        return ecr;
+    }
     
     /**
      * get ECA By ECN
      * @param ecn
-     * @return
+     * @return		if ecn is exist,return eca
+     * 				else if ecn is not exist,return []
+     * 				else if ecn is null,return []
      */
-    public static List<WTChangeActivity2> getECAByECN(WTChangeOrder2 ecn){
+    @SuppressWarnings("unchecked")
+	public static List<WTChangeActivity2> getECAByECN(WTChangeOrder2 ecn){
     	List<WTChangeActivity2> list = new ArrayList<WTChangeActivity2>();
-    	if(ecn!=null){
-    		try{
-    			QueryResult result = ChangeHelper2.service.getChangeActivities(ecn);
-    			while (result.hasMoreElements()) {
-		            WTChangeActivity2 activity = (WTChangeActivity2) result.nextElement();
-		            list.add(activity);
-		        }
-    		}catch(WTException e){
-    			logger.error(">>>>>"+e);
-    		}
-    	}
+    	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (List<WTChangeActivity2>) RemoteMethodServer.getDefault().invoke("getECAByECN", 
+	                		ChangeUtil.class.getName(), null, new Class[] { WTChangeOrder2.class},
+	                		new Object[] { ecn});
+	        } else {
+		    	if(ecn!=null && isChangeObjectExist(ecn)){
+		    		try{
+		    			QueryResult result = ChangeHelper2.service.getChangeActivities(ecn);
+		    			while (result.hasMoreElements()) {
+				            WTChangeActivity2 activity = (WTChangeActivity2) result.nextElement();
+				            list.add(activity);
+				        }
+		    		}catch(WTException e){
+		    			logger.error(">>>>>"+e);
+		    		}
+		    	}
+	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
+        }
     	return list;
     }
     
     /**
      * get ECN by ECR
      * @param ecr
-     * @return
+     * @return		if ecr is exist,return ecn
+     * 				else if ecr is not exist,return []
+     * 				else if ecr is null,return []
      */
-    public static List<WTChangeOrder2> getECNByECR(WTChangeRequest2 ecr){
+    @SuppressWarnings("unchecked")
+	public static List<WTChangeOrder2> getECNByECR(WTChangeRequest2 ecr){
     	List<WTChangeOrder2> list = new ArrayList<WTChangeOrder2>();
-    	if(ecr!=null){
-    		try{
-    			QueryResult result = ChangeHelper2.service.getChangeOrders(ecr);
-    			while (result.hasMoreElements()) {
-    				WTChangeOrder2 order = (WTChangeOrder2) result.nextElement();
-		            list.add(order);
-		        }
-    		}catch(WTException e){
-    			logger.error(">>>>>"+e);
-    		}
-    	}
+    	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (List<WTChangeOrder2>) RemoteMethodServer.getDefault().invoke("getECNByECR", 
+	                		ChangeUtil.class.getName(), null, new Class[] { WTChangeRequest2.class},
+	                		new Object[] { ecr});
+	        } else {
+		    	if(ecr!=null && isChangeObjectExist(ecr)){
+		    		try{
+		    			QueryResult result = ChangeHelper2.service.getChangeOrders(ecr);
+		    			while (result.hasMoreElements()) {
+		    				WTChangeOrder2 order = (WTChangeOrder2) result.nextElement();
+				            list.add(order);
+				        }
+		    		}catch(WTException e){
+		    			logger.error(">>>>>"+e);
+		    		}
+		    	}
+	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
+        }
     	return list;
     }
     
     /**
      * get ECN by ECA
-     * @param eci
-     * @return
+     * @param eca
+     * @return		if eca is exist,return ecn
+     * 				else if eca is not exist,return null
+     * 				else if eca is null,return null
      */
     public static WTChangeOrder2 getECNByECA(WTChangeActivity2 eca){
     	WTChangeOrder2 order = null;
-    	if(eca!=null){
-    		try{
-    			QueryResult result = ChangeHelper2.service.getChangeOrder(eca);
-    			while (result.hasMoreElements()) {
-    				order = (WTChangeOrder2) result.nextElement();
-		        }
-    		}catch(WTException e){
-    			logger.error(">>>>>"+e);
-    		}
-    	}
+    	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (WTChangeOrder2) RemoteMethodServer.getDefault().invoke("getECNByECA", 
+	                		ChangeUtil.class.getName(), null, new Class[] { WTChangeActivity2.class},
+	                		new Object[] { eca});
+	        } else {
+		    	if(eca!=null && isChangeObjectExist(eca)){
+		    		try{
+		    			QueryResult result = ChangeHelper2.service.getChangeOrder(eca);
+		    			while (result.hasMoreElements()) {
+		    				order = (WTChangeOrder2) result.nextElement();
+				        }
+		    		}catch(WTException e){
+		    			logger.error(">>>>>"+e);
+		    		}
+		    	}
+	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
+        }
     	return order;
     }
     
     /**
      * get ECR by PR
      * @param issue
-     * @return
+     * @return		if issue is exist,return ecr
+     * 				else if issue is not exist,return null
+     * 				else if issue is null,return null
      */
     public static WTChangeRequest2 getECRByPR(WTChangeIssue issue){
     	WTChangeRequest2 order = null;
-    	if(issue!=null){
-    		try{
-    			QueryResult result = ChangeHelper2.service.getChangeRequest(issue);
-    			while (result.hasMoreElements()) {
-    				order = (WTChangeRequest2) result.nextElement();
-		        }
-    		}catch(WTException e){
-    			logger.error(">>>>>"+e);
-    		}
-    	}
+    	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (WTChangeRequest2) RemoteMethodServer.getDefault().invoke("getECRByPR", 
+	                		ChangeUtil.class.getName(), null, new Class[] { WTChangeIssue.class},
+	                		new Object[] { issue});
+	        } else {
+		    	if(issue!=null && isChangeObjectExist(issue)){
+		    		try{
+		    			QueryResult result = ChangeHelper2.service.getChangeRequest(issue);
+		    			while (result.hasMoreElements()) {
+		    				order = (WTChangeRequest2) result.nextElement();
+				        }
+		    		}catch(WTException e){
+		    			logger.error(">>>>>"+e);
+		    		}
+		    	}
+	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
+        }
     	return order;
     }
     
     /**
      * get PR by ECR
      * @param request
-     * @return
+     * @return		if ecr is exist,return pr
+     * 				else if ecr is not exist,return []
+     * 				else if ecr is null,return []
      */
-    public static List<WTChangeIssue> getPRByECR(WTChangeRequest2 ecr){
+    @SuppressWarnings("unchecked")
+	public static List<WTChangeIssue> getPRByECR(WTChangeRequest2 ecr){
     	List<WTChangeIssue> list = new ArrayList<WTChangeIssue>();
-    	if(ecr!=null){
-    		try{
-    			QueryResult result = ChangeHelper2.service.getChangeIssues(ecr);
-    			while (result.hasMoreElements()) {
-    				WTChangeIssue order = (WTChangeIssue) result.nextElement();
-		            list.add(order);
-		        }
-    		}catch(WTException e){
-    			logger.error(">>>>>"+e);
-    		}
-    	}
+    	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (List<WTChangeIssue>) RemoteMethodServer.getDefault().invoke("getPRByECR", 
+	                		ChangeUtil.class.getName(), null, new Class[] { WTChangeRequest2.class},
+	                		new Object[] { ecr});
+	        } else {
+		    	if(ecr!=null && isChangeObjectExist(ecr)){
+		    		try{
+		    			QueryResult result = ChangeHelper2.service.getChangeIssues(ecr);
+		    			while (result.hasMoreElements()) {
+		    				WTChangeIssue order = (WTChangeIssue) result.nextElement();
+				            list.add(order);
+				        }
+		    		}catch(WTException e){
+		    			logger.error(">>>>>"+e);
+		    		}
+		    	}
+	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
+        }
     	return list;
     }
     
+    /**
+     * get ecr by ecn
+     * @param ecn
+     * @return		if ecn is exist,return ecr
+     * 				else if ecn is not exist,return null
+     * 				else if ecn is null,return null
+     */
     public static WTChangeRequest2 getECRByECN(WTChangeOrder2 ecn){
     	WTChangeRequest2 order = null;
-    	if(ecn!=null){
-    		try{
-    			QueryResult result = ChangeHelper2.service.getChangeRequest(ecn);
-    			while (result.hasMoreElements()) {
-    				order = (WTChangeRequest2) result.nextElement();
-		        }
-    		}catch(WTException e){
-    			logger.error(">>>>>"+e);
-    		}
-    	}
+    	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (WTChangeRequest2) RemoteMethodServer.getDefault().invoke("getECRByECN", 
+	                		ChangeUtil.class.getName(), null, new Class[] { WTChangeOrder2.class},
+	                		new Object[] { ecn});
+	        } else {
+		    	if(ecn!=null && isChangeObjectExist(ecn)){
+		    		try{
+		    			QueryResult result = ChangeHelper2.service.getChangeRequest(ecn);
+		    			while (result.hasMoreElements()) {
+		    				order = (WTChangeRequest2) result.nextElement();
+				        }
+		    		}catch(WTException e){
+		    			logger.error(">>>>>"+e);
+		    		}
+		    	}
+	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
+        }
     	return order;
-    }
-    
-    /**
-     * This method is used to get ECN by it's number.
-     * 
-     * @param nameORnumber
-     *            ECN name or number
-     * @return Engineering Change Notice
-     */
-    @SuppressWarnings("deprecation")
-	public static WTChangeOrder2 getECNByNumber(String number){
-        try {
-        	if(!StringUtils.isEmpty(number)){
-	            QuerySpec criteria = new QuerySpec(WTChangeOrder2.class);
-	            criteria.appendSearchCondition(new SearchCondition(WTChangeOrder2.class, WTChangeOrder2.NUMBER,
-	                    SearchCondition.EQUAL, number, false));
-	            QueryResult results = PersistenceHelper.manager.find(criteria);
-	            if (results.hasMoreElements()) {
-	                return (WTChangeOrder2) results.nextElement();
-	            }
-        	}
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-        return null;
-    }
-    
-    /**
-     * get ECA by Number
-     * @param number
-     * @return
-     */
-    @SuppressWarnings("deprecation")
-	public static WTChangeActivity2 getECAByNumber(String number){
-        try {
-        	if(!StringUtils.isEmpty(number)){
-	            QuerySpec criteria = new QuerySpec(WTChangeActivity2.class);
-	            criteria.appendSearchCondition(new SearchCondition(WTChangeActivity2.class, WTChangeActivity2.NUMBER,
-	                    SearchCondition.EQUAL, number, false));
-	            QueryResult results = PersistenceHelper.manager.find(criteria);
-	            if (results.hasMoreElements()) {
-	                return (WTChangeActivity2) results.nextElement();
-	            }
-        	}
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-        return null;
-    }
-    
-    /**
-     * get ECR by number
-     * @param number
-     * @return
-     */
-    @SuppressWarnings("deprecation")
-	public static WTChangeRequest2 getECRByNumber(String number){
-        try {
-        	if(!StringUtils.isEmpty(number)){
-	            QuerySpec criteria = new QuerySpec(WTChangeRequest2.class);
-	            criteria.appendSearchCondition(new SearchCondition(WTChangeRequest2.class, WTChangeRequest2.NUMBER,
-	                    SearchCondition.EQUAL, number, false));
-	            QueryResult results = PersistenceHelper.manager.find(criteria);
-	            if (results.hasMoreElements()) {
-	                return (WTChangeRequest2) results.nextElement();
-	            }
-        	}
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-        return null;
-    }
-    
-    @SuppressWarnings("deprecation")
-	public static WTChangeIssue getPRByNumber(String number){
-        try {
-        	if(!StringUtils.isEmpty(number)){
-	            QuerySpec criteria = new QuerySpec(WTChangeIssue.class);
-	            criteria.appendSearchCondition(new SearchCondition(WTChangeIssue.class, WTChangeIssue.NUMBER,
-	                    SearchCondition.EQUAL, number, false));
-	            QueryResult results = PersistenceHelper.manager.find(criteria);
-	            if (results.hasMoreElements()) {
-	                return (WTChangeIssue) results.nextElement();
-	            }
-        	}
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-        return null;
     }
     
     /**
      * set stateOfAfter by ChangeOrder2 
      * @param order
      * @param state
+     * 			if order is exist and state is exist in windChill,set the after object state
+     * 			else if order is not exist,there is nothing to do
+     * 			else if order and state are all null,there is nothing to do
      */
     public static void setStateOfAfter(ChangeOrder2 order, State state) {
-    	if(order!=null && state!=null){
-    		try{
-		        QueryResult qr = ChangeHelper2.service.getChangeablesAfter(order);
-		        WTList changeables = new WTArrayList(qr);
-		        LifeCycleServerHelper.service.setState(changeables, state);
-    		}catch(WTException e){
-    			logger.error(">>>>>"+e);
-    		}
-    	}
+    	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	                RemoteMethodServer.getDefault().invoke("setStateOfAfter", 
+	                		ChangeUtil.class.getName(), null, new Class[] { ChangeOrder2.class,State.class},
+	                		new Object[] {order,state});
+	        } else {
+		    	if(order!=null && isChangeObjectExist(order) && state!=null){
+		    		try{
+				        QueryResult qr = ChangeHelper2.service.getChangeablesAfter(order);
+				        WTList changeables = new WTArrayList(qr);
+				        LifeCycleServerHelper.service.setState(changeables, state);
+		    		}catch(WTException e){
+		    			logger.error(">>>>>"+e);
+		    		}
+		    	}
+	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
+        }
     }
     
     /**
@@ -556,141 +829,301 @@ public class ChangeUtil implements RemoteAccess,Serializable {
      * @param order
      * @param state
      * @throws WTException
+     * 		if order is exist and state is exist in windChill,set the before object state
+     * 			else if order is not exist,there is nothing to do
+     * 			else if order and state are all null,there is nothing to do
      */
     public static void setStateOfBefore(ChangeOrder2 order, State state) throws WTException {
-    	if(order!=null && state!=null){
-    		try{
-		        QueryResult qr = ChangeHelper2.service.getChangeablesBefore(order);
-		        WTList changeables = new WTArrayList(qr);
-		        LifeCycleServerHelper.service.setState(changeables, state);
-    		}catch(WTException e){
-    			logger.error(">>>>>"+e);
-    		}
-    	}
-    }
-    
-    /**
-     * get number by LifeCycleManager
-     * @param lcm
-     * @return
-     */
-    public static String getNumber(LifeCycleManaged lcm) {
-        String number = "";
-        if(lcm!=null){
-	        if (lcm instanceof WTDocument) {
-	           number = ((WTDocument) lcm).getNumber();
-	        } else if (lcm instanceof WTPart) {
-	           number = ((WTPart) lcm).getNumber();
-	        } else if (lcm instanceof EPMDocument) {
-	           number = ((EPMDocument) lcm).getNumber();
+    	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	                RemoteMethodServer.getDefault().invoke("setStateOfBefore", 
+	                		ChangeUtil.class.getName(), null, new Class[] { ChangeOrder2.class,State.class},
+	                		new Object[] {order,state});
+	        } else {
+		    	if(order!=null && isChangeObjectExist(order) && state!=null){
+		    		try{
+				        QueryResult qr = ChangeHelper2.service.getChangeablesBefore(order);
+				        WTList changeables = new WTArrayList(qr);
+				        LifeCycleServerHelper.service.setState(changeables, state);
+		    		}catch(WTException e){
+		    			logger.error(">>>>>"+e);
+		    		}
+		    	}
 	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
         }
-        return number;
     }
-    
+   
     /**
      * judge whether the object has been existend in  the result item
      * @param persistable
-     * @param ca
-     * @return
+     * @param eca
+     * @return		if eca is exist and eca has after object(persistable),return true
+     * 				else if eca is not exist,reutrn false
+     * 				else if eca is exist,persistable is not exist,return false
+     * 				else if eca and persistable are null,return false
      */
     public static boolean inChangeablesAfter(Persistable persistable, WTChangeActivity2 eca){
 		boolean flag = false;
-		try{
-			if(persistable!=null && eca!=null){
-				QueryResult caResult = ChangeHelper2.service.getChangeablesAfter(eca);
-				while (caResult.hasMoreElements()) {
-				    Persistable persistableAfter = (Persistable) caResult.nextElement();
-				    flag = persistable.equals(persistableAfter);
-				    if (flag) {
-				        break;
-				    }
+		boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	               return (boolean)RemoteMethodServer.getDefault().invoke("inChangeablesAfter", 
+	                		ChangeUtil.class.getName(), null, new Class[] { Persistable.class,WTChangeActivity2.class},
+	                		new Object[] {persistable,eca});
+	        } else {
+				try{
+					if(persistable!=null && eca!=null && isChangeObjectExist(eca)){
+						QueryResult caResult = ChangeHelper2.service.getChangeablesAfter(eca);
+						while (caResult.hasMoreElements()) {
+						    Persistable persistableAfter = (Persistable) caResult.nextElement();
+						    flag = persistable.equals(persistableAfter);
+						    if (flag) {
+						        break;
+						    }
+						}
+					}
+				}catch(WTException e){
+					logger.error(">>>>>"+e);
 				}
-			}
-		}catch(WTException e){
-			logger.error(">>>>>"+e);
-		}
+	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
+        }
 		return flag;
 	}
     
     /**
      * judge whether the object has been existend in  the affect item
      * @param persistable
-     * @param ca
-     * @return
+     * @param eca
+     * @return		if eca is exist and eca has before object(persistable),return true
+     * 				else if eca is not exist,reutrn false
+     * 				else if eca is exist,persistable is not exist,return false
+     * 				else if eca and persistable are null,return false
      */
-    public static boolean inChangeablesBefore(Persistable persistable, WTChangeActivity2 ca) {
+    public static boolean inChangeablesBefore(Persistable persistable, WTChangeActivity2 eca) {
 		boolean flag = false;
-		try{
-			if(persistable!=null && ca!=null){
-				QueryResult caResult = ChangeHelper2.service.getChangeablesBefore(ca);
-				while (caResult.hasMoreElements()) {
-				    Persistable persistableAfter = (Persistable) caResult.nextElement();
-				    flag = persistable.equals(persistableAfter);
-				    if (flag) {
-				        break;
-				    }
+		boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+        try{
+	        if (!RemoteMethodServer.ServerFlag) {
+	               return (boolean)RemoteMethodServer.getDefault().invoke("inChangeablesBefore", 
+	                		ChangeUtil.class.getName(), null, new Class[] { Persistable.class,WTChangeActivity2.class},
+	                		new Object[] {persistable,eca});
+	        } else {
+				try{
+					if(persistable!=null && eca!=null && isChangeObjectExist(eca)){
+						QueryResult caResult = ChangeHelper2.service.getChangeablesBefore(eca);
+						while (caResult.hasMoreElements()) {
+						    Persistable persistableAfter = (Persistable) caResult.nextElement();
+						    flag = persistable.equals(persistableAfter);
+						    if (flag) {
+						        break;
+						    }
+						}
+					}
+				}catch(WTException e){
+					logger.error(">>>>>"+e);
 				}
-			}
-		}catch(WTException e){
-			logger.error(">>>>>"+e);
-		}
+	        }
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(),e);
+        } catch (InvocationTargetException e) {
+        	logger.error(e.getMessage(),e);
+        } finally {
+            SessionServerHelper.manager.setAccessEnforced(enforce);
+        }
 		return flag;
 	}
     
 	public static void test() throws RemoteException, InvocationTargetException, WTException{
-		System.out.println(getNumber(PartUtil.getPartByNumber("asdf")));
-		inChangeablesBefore(FolderUtil.getPersistableByOid("VR:wt.part.WTPart:171023"), getECAByNumber("00001"));
-		/*List<WTChangeIssue> list = getPRByECR(getECRByNumber("00001"));
-		for (int i = 0; i < list.size(); i++) {
-			System.out.println(list.get(i));
-		}*/
-		//System.out.println(getECRByECN(getECNByNumber("00021")));
-		/*setStateOfAfter(getECNByNumber("00001"), State.RELEASED);
-		setStateOfBefore(getECNByNumber("00001"), State.RELEASED);*/
-		/*List<LifeCycleManaged> list = getChangeBefore2(getECNByNumber("00006"));
-		for (int i = 0; i < list.size(); i++) {
-			System.out.println(getNumber(list.get(i)));
-			System.out.println(list.get(i));
-		}*/
-		/*System.out.println(inChangeablesBefore(FolderUtil.getPersistableByOid
-				("OR:wt.part.WTPart:180129"),getECAByNumber("00021")));
-		System.out.println(inChangeablesBefore(FolderUtil.getPersistableByOid
-				("OR:wt.part.WTPart:152450"),getECAByNumber("00021")));*/
-		/*WTChangeOrder2 changeOrder = createWTChangeOrder2("TestECN-0002_Number", "TestECN-0002_Name", "wt.change2.WTChangeOrder2",
-				FolderUtil.getFolder(PartUtil.getPartByNumber("0000000041").getContainer(),""), "TestECN-000_Name");
-		System.out.println(changeOrder);*/
-		/*WTChangeOrder2 changeOrder1 = createWTChangeOrder2ByNumber("TestECN-0008_Number","TestECN-0008_Name", "wt.change2.WTChangeOrder2");
-		System.out.println(changeOrder1);
-		WTChangeOrder2 changeOrder2 = createWTChangeOrder2ByNumber("TestECN-0009_Number","TestECN-0009_Name", "wt.change2.WTChangeOrder2",
-				FolderUtil.getFolder(PartUtil.getPartByNumber("0000000041").getContainer(),""));
-		System.out.println(changeOrder2);
-		WTChangeOrder2 changeOrder4 = createWTChangeOrder2ByNumber("TestECN-0010_Number","TestECN-0010_Name", "wt.change2.WTChangeOrder2", "TestECN-0010_Name");
-		System.out.println(changeOrder4);*/
-		
-		
-		//System.out.println(getECNByNumber("asdf"));
-		/*System.out.println(getECNByECA(getECAByNumber("00021")));
-    	List<WTChangeIssue> change = getPRByECR(getECRByNumber("00021"));
-    	for (int i = 0; i < change.size(); i++) {
-			System.out.println(change.get(i));
-		}
-    	List<WTChangeRequest2> change2 = getECRByECN(getECNByNumber("00021"));
-    	for (int i = 0; i < change2.size(); i++) {
-			System.out.println(change2.get(i));
-		}*/
-    	
-    	/*System.out.println("------------------"+getECAByECN(getECNByNumber("00041")));
-    	System.out.println("------------------"+getECNByECR(getECRByNumber("00021")));*/
-    	//System.out.println(createECA(changeOrder, "TestECNA-001_Name"));
-    	/*System.out.println(createWTChangeOrder2ByNumber("TestECN-006_Number","TestECN-005_Name", "wt.change2.WTChangeOrder2"));
-    	System.out.println(createWTChangeOrder2ByNumber("TestECN-006_Number","TestECN-005_Name","wt.change2.WTChangeOrder2",
-    			FolderUtil.getFolder(PartUtil.getPartByNumber("0000000061").getContainer(), "")));
-    	
-    	System.out.println(createWTChangeOrder2ByName("TestECN-005_Name", "wt.change2.WTChangeOrder2","sdfgg"));
-    	System.out.println(createWTChangeOrder2ByName("TestECN-005_Name", "wt.change2.WTChangeOrder2"));
-    	System.out.println(createWTChangeOrder2ByName("TestECN-005_Name","wt.change2.WTChangeOrder2",
-    			FolderUtil.getFolder(PartUtil.getPartByNumber("0000000061").getContainer(), "")));*/
+//		System.out.println("/*********************isIssueExist********************/");
+//		System.out.println(isIssueExist("00001"));
+//		System.out.println(isIssueExist("asd"));
+//		System.out.println(isIssueExist(""));
+//		System.out.println(isIssueExist(null));
+//		System.out.println("/*********************isECRExist********************/");
+//		System.out.println(isECRExist("00001"));
+//		System.out.println(isECRExist("asd"));
+//		System.out.println(isECRExist(""));
+//		System.out.println(isECRExist(null));
+//		System.out.println("/*********************isECNExist********************/");
+//		System.out.println(isECNExist("00061"));
+//		System.out.println(isECNExist("asd"));
+//		System.out.println(isECNExist(""));
+//		System.out.println(isECNExist(null));
+//		System.out.println("/*********************isECRExist********************/");
+//		System.out.println(isECAExist("00001"));
+//		System.out.println(isECAExist("asd"));
+//		System.out.println(isECAExist(""));
+//		System.out.println(isECAExist(null));
+//		System.out.println("/*********************isChangeObjectExist********************/");
+//		System.out.println(isChangeObjectExist(getPRByNumber("00001")));
+//		System.out.println(isChangeObjectExist(getPRByNumber("asd")));
+//		System.out.println(isChangeObjectExist(getPRByNumber("")));
+//		System.out.println(isChangeObjectExist(getPRByNumber(null)));
+//		System.out.println("-----------------------------------------");
+//		System.out.println(isChangeObjectExist(getECRByNumber("00001")));
+//		System.out.println(isChangeObjectExist(getECRByNumber("asd")));
+//		System.out.println(isChangeObjectExist(getECRByNumber("")));
+//		System.out.println(isChangeObjectExist(getECRByNumber(null)));
+//		System.out.println("-----------------------------------------");
+//		System.out.println(isChangeObjectExist(getECNByNumber("00001")));
+//		System.out.println(isChangeObjectExist(getECNByNumber("asd")));
+//		System.out.println(isChangeObjectExist(getECNByNumber("")));
+//		System.out.println(isChangeObjectExist(getECNByNumber(null)));
+//		System.out.println("-----------------------------------------");
+//		System.out.println(isChangeObjectExist(getECAByNumber("00001")));
+//		System.out.println(isChangeObjectExist(getECAByNumber("asd")));
+//		System.out.println(isChangeObjectExist(getECAByNumber("")));
+//		System.out.println(isChangeObjectExist(getECAByNumber(null)));
+//		System.out.println("/*********************createWTChangeOrder2********************/");
+//		System.out.println(createWTChangeOrder2("wt.change2.WTChangeOrder2", "test_change_number1", 
+//				"test_change_name1",ChangeNoticeComplexity.BASIC,"createChange1"));
+//		System.out.println(createWTChangeOrder2("wt.change2.WTChangeOrder2", "", 
+//				"test_change_name2",ChangeNoticeComplexity.BASIC, "createChange1"));
+//		System.out.println(createWTChangeOrder2("wt.change2.WTChangeOrder2", "00061", 
+//				"test_change_name3",ChangeNoticeComplexity.BASIC, "createChange1"));
+//		System.out.println(createWTChangeOrder2("wt.change2", "test_change_number1", 
+//				"test_change_name4",ChangeNoticeComplexity.BASIC, "createChange1"));
+//		System.out.println(createWTChangeOrder2("wt.change2.WTChangeOrder2", "test_change_number5",
+//				"test_change_name5",null, "createChange1"));
+//		System.out.println(createWTChangeOrder2("wt.change2.WTChangeOrder2", "test_change_number1",
+//				"",null, "createChange1"));
+//		System.out.println(createWTChangeOrder2("wt.change2.WTChangeOrder2", "test_change_number7", 
+//				"test_change_name7",ChangeNoticeComplexity.BASIC,""));
+//		System.out.println(createWTChangeOrder2(null, null, null,null,null));
+//		System.out.println("/*********************getECNByNumber********************/");
+//		System.out.println(getECNByNumber("00061"));
+//		System.out.println(getECNByNumber("asd"));
+//		System.out.println(getECNByNumber(""));
+//		System.out.println(getECNByNumber(null));
+//		System.out.println("/*********************getChangeBefore********************/");
+//		List<WTObject> list = getChangeBefore(getECNByNumber("00001"));
+//		for (int i = 0; i < list.size(); i++) {
+//			System.out.println("1-------------"+list.get(i));
+//		}
+//		List<WTObject> list1 = getChangeBefore(getECNByNumber("asd"));
+//		for (int i = 0; i < list1.size(); i++) {
+//			System.out.println("2-------------"+list1.get(i));
+//		}
+//		List<WTObject> list2 = getChangeBefore(getECNByNumber(""));
+//		for (int i = 0; i < list2.size(); i++) {
+//			System.out.println("3-------------"+list2.get(i));
+//		}
+//		List<WTObject> list3 = getChangeBefore(null);
+//		for (int i = 0; i < list3.size(); i++) {
+//			System.out.println("4-------------"+list3.get(i));
+//		}
+//		System.out.println("/*********************getChangeAfter********************/");
+//		List<WTObject> list = getChangeAfter(getECNByNumber("00001"));
+//		for (int i = 0; i < list.size(); i++) {
+//			System.out.println("1-------------"+list.get(i));
+//		}
+//		List<WTObject> list1 = getChangeAfter(getECNByNumber("asd"));
+//		for (int i = 0; i < list1.size(); i++) {
+//			System.out.println("2-------------"+list1.get(i));
+//		}
+//		List<WTObject> list2 = getChangeAfter(getECNByNumber(""));
+//		for (int i = 0; i < list2.size(); i++) {
+//			System.out.println("3-------------"+list2.get(i));
+//		}
+//		List<WTObject> list3 = getChangeAfter(null);
+//		for (int i = 0; i < list3.size(); i++) {
+//			System.out.println("4-------------"+list3.get(i));
+//		}
+//		System.out.println("/*********************getPRByNumber********************/");
+//		System.out.println(getPRByNumber("00001"));
+//		System.out.println(getPRByNumber("asd"));
+//		System.out.println(getPRByNumber(""));
+//		System.out.println(getPRByNumber(null));
+//		System.out.println("/*********************getECAByNumber********************/");
+//		System.out.println(getECAByNumber("00001"));
+//		System.out.println(getECAByNumber("asd"));
+//		System.out.println(getECAByNumber(""));
+//		System.out.println(getECAByNumber(null));
+//		System.out.println("/*********************getECRByNumber********************/");
+//		System.out.println(getECRByNumber("00001"));
+//		System.out.println(getECRByNumber("asd"));
+//		System.out.println(getECRByNumber(""));
+//		System.out.println(getECRByNumber(null));
+//		System.out.println("/*********************getECAByECN********************/");
+//		List<WTChangeActivity2> list = getECAByECN(getECNByNumber("00001"));
+//		for (int i = 0; i < list.size(); i++) {
+//			System.out.println("1-------------"+list.get(i));
+//		}
+//		List<WTChangeActivity2> list1 = getECAByECN(getECNByNumber("asd"));
+//		for (int i = 0; i < list1.size(); i++) {
+//			System.out.println("2-------------"+list1.get(i));
+//		}
+//		List<WTChangeActivity2> list2 = getECAByECN(null);
+//		for (int i = 0; i < list2.size(); i++) {
+//			System.out.println("3-------------"+list2.get(i));
+//		}
+//		System.out.println("/*********************getECAByECN********************/");
+//		List<WTChangeOrder2> list = getECNByECR(getECRByNumber("00001"));
+//		for (int i = 0; i < list.size(); i++) {
+//			System.out.println("1-------------"+list.get(i));
+//		}
+//		List<WTChangeOrder2> list1 = getECNByECR(getECRByNumber("asd"));
+//		for (int i = 0; i < list1.size(); i++) {
+//			System.out.println("2-------------"+list1.get(i));
+//		}
+//		List<WTChangeOrder2> list2 = getECNByECR(null);
+//		for (int i = 0; i < list2.size(); i++) {
+//			System.out.println("3-------------"+list2.get(i));
+//		}
+//		System.out.println("/*********************getECNByECA********************/");
+//		System.out.println(getECNByECA(getECAByNumber("00001")));
+//		System.out.println(getECNByECA(getECAByNumber("asd")));
+//		System.out.println(getECNByECA(null));
+//		System.out.println("/*********************getECRByPR********************/");
+//		System.out.println(getECRByPR(getPRByNumber("00021")));
+//		System.out.println(getECRByPR(getPRByNumber("asd")));
+//		System.out.println(getECRByPR(null));
+//		System.out.println("/*********************getPRByECR********************/");
+//		List<WTChangeIssue> list = getPRByECR(getECRByNumber("00001"));
+//		for (int i = 0; i < list.size(); i++) {
+//			System.out.println("1-------------"+list.get(i));
+//		}
+//		List<WTChangeIssue> list1 = getPRByECR(getECRByNumber("asd"));
+//		for (int i = 0; i < list1.size(); i++) {
+//			System.out.println("2-------------"+list1.get(i));
+//		}
+//		List<WTChangeIssue> list2 = getPRByECR(null);
+//		for (int i = 0; i < list2.size(); i++) {
+//			System.out.println("3-------------"+list2.get(i));
+//		}
+//		System.out.println("/*********************getECRByECN********************/");
+//		System.out.println(getECRByECN(getECNByNumber("00001")));
+//		System.out.println(getECRByECN(getECNByNumber("asd")));
+//		System.out.println(getECRByECN(null));
+//		System.out.println("/*********************setStateOfAfter********************/");
+//		setStateOfAfter(getECNByNumber("00001"), State.RELEASED);
+//		setStateOfAfter(getECNByNumber("asd"), State.RELEASED);
+//		setStateOfAfter(null, null);
+//		System.out.println("/*********************setStateOfBefore********************/");
+//		setStateOfBefore(getECNByNumber("00001"), State.RELEASED);
+//		setStateOfBefore(getECNByNumber("asd"), State.RELEASED);
+//		setStateOfBefore(null, null);
+//		System.out.println("/*********************inChangeablesAfter********************/");
+//		System.out.println(inChangeablesAfter(CommonUtil.getPersistableByOid("OR:wt.part.WTPart:176160"), getECAByNumber("00001")));
+//		System.out.println(inChangeablesAfter(CommonUtil.getPersistableByOid("OR:wt.part.WTPart:171024"), getECAByNumber("00001")));
+//		System.out.println(inChangeablesAfter(null, null));
+//		System.out.println("/*********************inChangeablesBefore********************/");
+//		System.out.println(inChangeablesBefore(CommonUtil.getPersistableByOid("OR:wt.part.WTPart:171024"), getECAByNumber("00001")));
+//		System.out.println(inChangeablesBefore(CommonUtil.getPersistableByOid("OR:wt.part.WTPart:176160"), getECAByNumber("00001")));
+//		System.out.println(inChangeablesBefore(null, null));
 	}
 	
 	public static void main(String[] args) throws RemoteException, InvocationTargetException, WTException{
