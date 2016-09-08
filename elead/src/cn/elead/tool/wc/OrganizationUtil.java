@@ -281,6 +281,7 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
         }
     }
 	
+	
 	public static void test() throws RemoteException, InvocationTargetException, WTException{
 //		System.out.println("/*********************isWTOrganizationExistByName********************/");
 //		System.out.println(isWTOrganizationExistByName("plm-training"));

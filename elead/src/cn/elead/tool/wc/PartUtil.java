@@ -1,5 +1,6 @@
 package cn.elead.tool.wc;
 
+
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.rmi.RemoteException;

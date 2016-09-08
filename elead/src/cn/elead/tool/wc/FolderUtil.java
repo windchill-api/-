@@ -19,8 +19,9 @@ import wt.part.WTPart;
 import wt.session.SessionServerHelper;
 import wt.util.WTException;
 import cn.elead.tool.common.CommonUtil;
-public class FolderUtil implements RemoteAccess, Serializable {
 
+
+public class FolderUtil implements RemoteAccess, Serializable {
 
 	/**
 	 * @author WangY
