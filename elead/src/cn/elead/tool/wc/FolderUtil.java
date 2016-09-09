@@ -157,7 +157,7 @@ public class FolderUtil implements RemoteAccess, Serializable {
 	}
 	
 	/**
-	 * create folder by container and folderPath
+	 * create folder by containerRef and folderPath
 	 * @param container
 	 * @param path
 	 * @return		if containerRef is exist in windChill,path is not exist,create folder and return this folder

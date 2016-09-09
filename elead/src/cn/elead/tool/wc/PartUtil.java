@@ -55,7 +55,6 @@ import wt.vc.wip.Workable;
 /**
  * 
  * @author WangY
- *
  */
 public class PartUtil implements RemoteAccess, Serializable {
 	private static final long serialVersionUID = 1L;
@@ -137,7 +136,7 @@ public class PartUtil implements RemoteAccess, Serializable {
 	}
 	
 	/**
-	 * get part by number
+	 * get part by partNumber
 	 * if partNumber exist in windChill,return WTPart;	such as:partNumber = "0000000041"
 	 * 		else return null	such as 
 	 */
@@ -620,7 +619,7 @@ public class PartUtil implements RemoteAccess, Serializable {
 	}
 	
 	/**
-	 * get part discriptionDoc by part
+	 * get discriptionDoc by part
 	 * @param part
 	 * @return	if part is exist in windChill,return documents
 	 * 			else if part is null or part is not exist in windChill,return []
@@ -967,7 +966,7 @@ public class PartUtil implements RemoteAccess, Serializable {
 	}
 	
 	/**
-	 * checkIn part by part
+	 * checkIn part
 	 * @param part
 	 * 		if part is exist in windChill,checkIn part
 	 * 		else if part is not exist in windChill or part is null,there is nothing to do
@@ -1007,7 +1006,7 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * revise WTPart by part
 	 * @param part
 	 * @param comment
-	 * @return	if part is exist in windChill,checkIn part
+	 * @return	if part is exist in windChill,revise part
 	 * 			else if part is not exist in windChill or part is null,return null
 	 * @throws WTException
 	 */
@@ -1199,7 +1198,7 @@ public class PartUtil implements RemoteAccess, Serializable {
      * @return 		if parentPart and childMaster is exist in windChill,return usageLink
      * 				else return null
      * @throws WTException
-     *             Windchill exception
+     *             WindChill exception
      */
     public static WTPartUsageLink createUsageLink(WTPart parentPart,WTPartMaster childMaster)
             throws WTException {

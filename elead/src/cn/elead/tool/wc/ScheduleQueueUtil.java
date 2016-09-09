@@ -264,7 +264,7 @@ public class ScheduleQueueUtil implements RemoteAccess, Serializable {
     }
 	
 	/**
-	 * get sheduleIte bu QueueName
+	 * get sheduleIte by QueueName
 	 * @param scheduleQueueName
 	 * @return
 	 * @throws WTException

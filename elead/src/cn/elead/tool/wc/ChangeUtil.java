@@ -85,7 +85,7 @@ public class ChangeUtil implements RemoteAccess,Serializable {
     }
 	
     /**
-	 * judge whether issue exist by part number
+	 * judge whether ecr exist by ecrNumber
 	 * @param ecrNumber
 	 * @return	if ecrNumber exist in windChill, return true;	such as: ecrNumber = "00001"
      * 				else return false;	such as: ecrNumber = "asd" or ecrNumber = ""  or ecrNumber = null
@@ -124,7 +124,7 @@ public class ChangeUtil implements RemoteAccess,Serializable {
     }
     
 	/**
-	 * judge whether ecn exist by part number
+	 * judge whether ecn exist by ecnNumber
 	 * @param ecnNumber
 	 * @return	if ecnNumber exist in windChill, return true;	such as: ecnNumber = "00001"
      * 				else return false;	such as: ecnNumber = "asd" or ecnNumber = ""  or ecnNumber = null
@@ -163,7 +163,7 @@ public class ChangeUtil implements RemoteAccess,Serializable {
     }
     
     /**
-	 * judge whether eca exist by part number
+	 * judge whether eca exist by ecaNumber
 	 * @param ecaNumber
 	 * @return	if ecaNumber exist in windChill, return true;	such as: ecaNumber = "00061"
      * 				else return false;	such as: ecaNumber = "asd" or ecaNumber = ""  or ecaNumber = null
@@ -257,7 +257,7 @@ public class ChangeUtil implements RemoteAccess,Serializable {
    }
     
 	/**
-	 * create changeOrder
+	 * create WTchangeOrder2
 	 * @param ecnType
 	 * @param number
 	 * @param name
