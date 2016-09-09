@@ -18,7 +18,6 @@ import wt.scheduler.ScheduleItem;
 import wt.session.SessionServerHelper;
 import wt.util.WTException;
 
-
 public class ScheduleQueueUtil implements RemoteAccess, Serializable {
 
 	/**

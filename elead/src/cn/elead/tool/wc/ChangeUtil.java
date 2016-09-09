@@ -37,7 +37,6 @@ import wt.type.TypeDefinitionReference;
 import wt.type.TypedUtility;
 import wt.util.WTException;
 
-
 public class ChangeUtil implements RemoteAccess,Serializable {
 	
 	/**
