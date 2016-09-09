@@ -725,8 +725,10 @@ public class PartUtil implements RemoteAccess, Serializable {
 					if(!StringUtils.isEmpty(newPartName)&& !StringUtils.isEmpty(partNumber)
 							&& isPartExist(partNumber)){
 						part = WTPart.newWTPart();
-						part.setName(newPartName);//设置名字						
-						part.setNumber(newPartNumber);//设置编号												
+						part.setName(newPartName);//设置名字
+						if(!StringUtils.isEmpty(newPartNumber) && !isPartExist(newPartNumber)){
+							part.setNumber(newPartNumber);//设置编号
+						}
 						part.setContainer(getPartByNumber(partNumber).getContainer());//设置容器
 						PersistenceHelper.manager.save(part);
 					}
