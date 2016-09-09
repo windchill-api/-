@@ -330,4 +330,60 @@ public class ContentUtil implements RemoteAccess {
 			throw new WTException(e);
 		}
 	}
+	
+	/**
+	 * deleteContentByFileName
+	 *  @author BaiJuanjuan
+	 * @param ContentHolder
+	 * @param String
+	 * @return
+	 * @throws WTException
+	 */
+	public static ContentHolder deleteContentByFileName(ContentHolder holder1,
+			String fileName) throws WTException {
+		if (!RemoteMethodServer.ServerFlag) {
+			try {
+				return (ContentHolder) RemoteMethodServer.getDefault().invoke(
+						"deleteContentByFileName", ContentUtil.class.getName(), null,
+						new Class[] { ContentHolder.class, String.class },
+						new Object[] { holder1,fileName });
+			} catch (java.rmi.RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			} else {
+					boolean enforce = wt.session.SessionServerHelper.manager
+								.setAccessEnforced(false);
+					ContentHolder holder = holder1;
+					if (fileName == null) {
+						return holder;
+					}
+					try {
+						holder = ContentHelper.service.getContents(holder);
+						List<?> vContentList = ContentHelper.getContentList(holder);
+						int iSize = vContentList.size();
+						for (int j = 0; j < iSize; j++) {
+							ContentItem contentitem = (ContentItem) vContentList.get(j);
+							String strFileName = ((ApplicationData) contentitem)
+									.getFileName();
+							if (fileName.equals(strFileName)) {
+								ContentServerHelper.service.deleteContent(holder,
+										contentitem);
+							}
+						}
+						holder = (FormatContentHolder) PersistenceHelper.manager
+								.refresh(holder);
+					} catch (PropertyVetoException e) {
+						LOGGER.error(e.getLocalizedMessage());
+						throw new WTException(e);
+					} finally {
+						SessionServerHelper.manager.setAccessEnforced(enforce);
+					}
+			}
+			return holder1;
+	}
+
 }
