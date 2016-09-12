@@ -892,31 +892,7 @@ public class PublicUtil implements RemoteAccess {
 		
 		return part;
 	}
-	
     
-	
-	
-	/**
-	 * 移除部件之间的WTPartUsageLink
-	 * @param superPart
-	 * @param subPart
-	 */
-	public static void removeWTPartUsageLink(WTPart superPart,WTPart subPart){
-		if (superPart!=null&&subPart!=null) {
-			WTPartUsageLink usagelink=getWTPartUsageLink(superPart, subPart);
-			if (usagelink!=null) {
-				try {
-					PersistenceServerHelper.manager.remove(usagelink);
-				} catch (WTException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-	
-	
-	
 	
 	/**
 	 * Description:              移除父类部件和子部件的全部使用关系
@@ -942,36 +918,6 @@ public class PublicUtil implements RemoteAccess {
 		
 		return part;
 	}
-	
-    
-	
-	/**
-	 * 得到试用关系
-	 * @author ymj
-	 * @directions
-	 * @param
-	 */
-	public static WTPartUsageLink getWTPartUsageLink(WTPart parentPart,WTPart childPart) {
-		WTPartUsageLink partUsageLink = null;
-		if (parentPart == null) {
-			return partUsageLink;
-		}
-		try {
-			LatestConfigSpec latestconfigspec = new LatestConfigSpec();
-			QueryResult qr = WTPartHelper.service.getUsesWTParts(parentPart,latestconfigspec);  
-			while (qr.hasMoreElements()) {
-				Persistable[] apersistable = (Persistable[]) qr.nextElement();
-				WTPart tempPart = (WTPart) apersistable[1];
-				if (childPart.getNumber().equals(tempPart.getNumber())) {
-					partUsageLink = (WTPartUsageLink) apersistable[0];
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return partUsageLink;
-	}
-	
 	
 	
 	/**

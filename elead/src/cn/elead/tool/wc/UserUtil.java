@@ -5,6 +5,7 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Vector;
 
 import org.apache.commons.lang.StringUtils;
@@ -13,11 +14,13 @@ import org.apache.log4j.Logger;
 import wt.fc.ObjectReference;
 import wt.fc.PersistenceHelper;
 import wt.fc.QueryResult;
+import wt.fc.WTObject;
 import wt.inf.container.OrgContainer;
 import wt.inf.container.WTContained;
 import wt.inf.container.WTContainer;
 import wt.inf.container.WTContainerHelper;
 import wt.inf.container.WTContainerServerHelper;
+import wt.inf.library.WTLibrary;
 import wt.inf.team.ContainerTeam;
 import wt.inf.team.ContainerTeamHelper;
 import wt.inf.team.ContainerTeamManaged;
@@ -43,6 +46,7 @@ import wt.session.SessionServerHelper;
 import wt.team.Team;
 import wt.team.TeamException;
 import wt.team.TeamHelper;
+import wt.team.WfRoleHelper;
 import wt.util.WTException;
 import wt.workflow.engine.WfProcess;
 
@@ -56,12 +60,8 @@ import com.ptc.windchill.enterprise.picker.principal.PrincipalBean;
 public class UserUtil implements RemoteAccess {
 	  private static String className = UserUtil.class.getName();
 	  private static final Logger LOGGER = LogR.getLogger(UserUtil.class.getName());
-	  
-      /*
-       * only get wcadmin.
-       * */
-	  public static WTPrincipalReference getCurrentUser() throws WTException
-	  {
+ 
+	  public static WTPrincipalReference getCurrentUser() throws WTException {
 	    return SessionHelper.manager.getPrincipalReference();
 	  }
 	  public static String getCurrentUserName() throws WTException {
@@ -73,12 +73,11 @@ public class UserUtil implements RemoteAccess {
 	    return reference.getFullName();
 	  }
 	  
-	  public static WTPrincipal getWTUserByName(String userName) throws WTException
-	  {
+	  public static WTPrincipal getWTUserByName(String userName) throws WTException {
 			if (!RemoteMethodServer.ServerFlag) {
 				try {
 					return (WTPrincipal) RemoteMethodServer.getDefault()
-							.invoke("getWTUserByName", DocUtil.class.getName(), null,
+							.invoke("getWTUserByName", UserUtil.class.getName(), null,
 									new Class[] {String.class}, new Object[] {userName});
 				} catch (Exception e) {
 					LOGGER.error(e.getMessage(), e);
@@ -88,7 +87,8 @@ public class UserUtil implements RemoteAccess {
 					boolean enforce = wt.session.SessionServerHelper.manager
 							.setAccessEnforced(false);
 				    if (!StringUtils.isEmpty(userName)) {
-				      return OrganizationServicesHelper.manager.getUser(userName);
+				    	SessionServerHelper.manager.setAccessEnforced(enforce);
+				        return OrganizationServicesHelper.manager.getUser(userName);
 				    }
 		    LOGGER.error("userName is null");
 		    return null;
@@ -96,8 +96,7 @@ public class UserUtil implements RemoteAccess {
 	  }
 	
 	
-	  public List<WTUser> findUser(String name) throws WTException
-	  {
+	  public List<WTUser> findUser(String name) throws WTException {
 	    if (!RemoteMethodServer.ServerFlag) {
 	      try {
 	        return (List<WTUser>)RemoteMethodServer.getDefault().invoke(
@@ -132,48 +131,49 @@ public class UserUtil implements RemoteAccess {
 	    return results;
 	  }
 	
-	  public static List<WTPrincipal> getMembersOfContainerRole(ContainerTeamManaged ctm, Role role)
-	  {
-	    if (!RemoteMethodServer.ServerFlag) {
-	      String method = "getMembersOfContainerRole";
-	      Class[] types = { ContainerTeamManaged.class, Role.class };
-	      Object[] vals = { ctm, role };
-	      try {
-	        return (ArrayList)RemoteMethodServer.getDefault().invoke(
-	          method, className, null, types, vals);
-	      } catch (Exception e) {
-	        LOGGER.debug("getMembersOfContainerRole() Exception:" + e);
-	        e.printStackTrace();
-	        return new ArrayList();
-	      }
-	    }
-	    List rtn = new ArrayList();
-	    boolean accessFlag = SessionServerHelper.manager.setAccessEnforced(false);
-		if (ctm != null) {
-	          try {
-	    		 ContainerTeam containerteam = ContainerTeamHelper.service
-	    			        .getContainerTeam(ctm);
-	    		 WTGroup wtgroup = ContainerTeamHelper.service
-	    				        .findContainerTeamGroup(containerteam, "roleGroups", 
-	    				        role.toString());
-	    		      if (wtgroup != null) {
-	    			        Enumeration members = wtgroup.members();
-	    			        while (members.hasMoreElements()) {
-	    			          WTPrincipal wtp = (WTPrincipal)members.nextElement();
-	    			          if ((wtp instanceof WTUser)) {
-	    			            WTUser user = (WTUser)wtp;
-	    			            rtn.add(user);
-	    			          }
-	    			        }
-	    			      }
-			   
-			    } catch (WTException wte) {
-			      wte.printStackTrace();
-			    } finally {
-			      SessionServerHelper.manager.setAccessEnforced(accessFlag);
-			    }
-		}
-	    return rtn;
+	  public static List<WTPrincipal> getMembersOfContainerRole(ContainerTeamManaged ctm, Role role) {
+		  try{
+		        if (!RemoteMethodServer.ServerFlag) {
+		                return (List<WTPrincipal>) RemoteMethodServer.getDefault().invoke("getMembersOfContainerRole", 
+		                		UserUtil.class.getName(), null, new Class[] { ContainerTeamManaged.class,Role.class},
+		                		new Object[] { ctm, role});
+		        } else {
+		        	WTOrganization org = null;
+		        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+				    List rtn = new ArrayList();
+				    boolean accessFlag = SessionServerHelper.manager.setAccessEnforced(false);
+					if (ctm != null) {
+				          try {
+				    		 ContainerTeam containerteam = ContainerTeamHelper.service
+				    			        .getContainerTeam(ctm);
+				    		 WTGroup wtgroup = ContainerTeamHelper.service
+				    				        .findContainerTeamGroup(containerteam, "roleGroups", 
+				    				        role.toString());
+				    		      if (wtgroup != null) {
+				    			        Enumeration members = wtgroup.members();
+				    			        while (members.hasMoreElements()) {
+				    			          WTPrincipal wtp = (WTPrincipal)members.nextElement();
+				    			          if ((wtp instanceof WTUser)) {
+				    			            WTUser user = (WTUser)wtp;
+				    			            rtn.add(user);
+				    			          }
+				    			        }
+				    			      }
+						   
+						    } catch (WTException wte) {
+						      wte.printStackTrace();
+						    } finally {
+						      SessionServerHelper.manager.setAccessEnforced(accessFlag);
+						    }
+					}
+		           return   rtn;
+		        }
+	        } catch (RemoteException e) {
+	            LOGGER.error(e.getMessage(),e);
+	        } catch (InvocationTargetException e) {
+	        	LOGGER.error(e.getMessage(),e);
+	        }
+	        return null;
 	  }
 		/**
 		 * @author BaiJuanjuan
@@ -314,12 +314,12 @@ public class UserUtil implements RemoteAccess {
 					    }finally {
 							SessionServerHelper.manager.setAccessEnforced(enforce);
 						}
-					    return false;
+					    return true;
 		            }
 		    } catch (Exception e) {   
 	            e.printStackTrace();   
 	        }   
-	        return true;   
+	        return false;   
 					    
 		  }
 	    
@@ -354,7 +354,7 @@ public class UserUtil implements RemoteAccess {
 		        } catch (Exception e) {   
 		            e.printStackTrace();   
 		        }   
-		        return new ArrayList<WTUser>(); 
+		        return null; 
 		    }
 
 		
@@ -396,7 +396,7 @@ public class UserUtil implements RemoteAccess {
 		        } catch (Exception e) {   
 		            e.printStackTrace();   
 		        }   
-		        return new ArrayList<WTUser>(); 
+		        return null; 
 		    }
 		    
 			/**
@@ -474,49 +474,6 @@ public class UserUtil implements RemoteAccess {
 						}
 		     }
 		    
-			
-			/**
-			 * @author BaiJuanjuan
-			 * @param name
-			 *            Organization name
-			 * @param
-			 * @return
-			 * @throws WTException
-			 */
-			public static WTOrganization getWTOrganization(String name)throws WTException {
-				WTOrganization org = null;
-        			if (!RemoteMethodServer.ServerFlag) {
-        				try {
-        	            	RemoteMethodServer.getDefault().invoke("getWTOrganization", 
-        	            		UserUtil.class.getName(), null, new Class[] { String.class },
-        	            		new Object[] { name});
-        				} catch (RemoteException e) {
-                            LOGGER.error(e.getMessage(),e);
-                        } catch (InvocationTargetException e) {
-                        	LOGGER.error(e.getMessage(),e);
-                        }
-        	        } else{
-        	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-						Object obj = null;
-						
-						QuerySpec criteria = new QuerySpec();
-						int index = criteria.appendClassList(WTOrganization.class, true);
-						SearchCondition sc = new SearchCondition(WTOrganization.class,
-								WTOrganization.NAME, SearchCondition.LIKE, name, false);
-						criteria.appendWhere(sc, new int[] { index });
-						QueryResult results = PersistenceHelper.manager
-								.find((StatementSpec) criteria);
-						if (results.hasMoreElements()) {
-							obj = results.nextElement();
-						}
-						if (obj instanceof Object[]) {
-							org = (WTOrganization) ((Object[]) obj)[0];
-						}
-						SessionServerHelper.manager.setAccessEnforced(enforce);
-        	        }
-        			return org;
-			}
-
 		            
 			/**
 			 * @author BaiJuanjuan
@@ -526,8 +483,7 @@ public class UserUtil implements RemoteAccess {
 			 * @return
 			 * @throws WTException
 			 */
-			public static List<WTPrincipal> findOrgAdmins(WTOrganization org)
-					throws WTException {
+			public static List<WTPrincipal> findOrgAdmins(WTOrganization org) throws WTException {
 				List<WTPrincipal> admins = new ArrayList<WTPrincipal>();
 				try {   
 		            if (!RemoteMethodServer.ServerFlag) {   
@@ -559,7 +515,7 @@ public class UserUtil implements RemoteAccess {
 		         }catch (Exception e) {   
 				            e.printStackTrace();   
 				 }  
-				return new ArrayList<WTPrincipal>() ;
+				return null;
 			}
 			
 			/**
@@ -616,7 +572,7 @@ public class UserUtil implements RemoteAccess {
 		        } catch (Exception e) {   
 		            e.printStackTrace();   
 		        }   
-		        return new ArrayList<Role>();        
+		        return null;        
 		    }   
 		       
 		    /**  
@@ -673,7 +629,7 @@ public class UserUtil implements RemoteAccess {
 		        } catch (Exception e) {   
 		            e.printStackTrace();   
 		        }   
-		        return new ArrayList<WTPrincipalReference>();        
+		        return null;        
 		    }   
 
 		    /**  
@@ -715,7 +671,93 @@ public class UserUtil implements RemoteAccess {
 		        }   
 		        return null;   
 		    }    
-		       
+
+			/**
+			 * 给角色设置/重新设置参与者
+			 * 
+			 * @param wfRoleInvl
+			 * @param roleArr
+			 * @param self
+			 * @param object
+			 * @throws WTException 
+			 */
+			public static void setDocRolePrincipal(String wfRoleInvl, String rolesStr,
+					ObjectReference self, WTObject object) throws WTException {    
+				        if (!RemoteMethodServer.ServerFlag) {
+				                 try {
+									RemoteMethodServer.getDefault().invoke("setDocRolePrincipal", 
+											OrganizationUtil.class.getName(), null, new Class[] { String.class,String.class},
+											new Object[] { wfRoleInvl,rolesStr });
+								} catch (RemoteException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								} catch (InvocationTargetException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+				        } else {
+				        	WTOrganization org = null;
+				        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+							WfProcess wfProcess = (WfProcess) self.getObject();
+							Role wfRole = Role.toRole(wfRoleInvl);
+							Team team = null;
+							try {
+								team = TeamHelper.service.getTeam(wfProcess);
+							} catch (TeamException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (WTException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							ContainerTeamManaged containerTeamManaged = null;
+							WTContainer wtContainer = wfProcess.getContainer();
+							if (wtContainer instanceof PDMLinkProduct){
+								containerTeamManaged = (PDMLinkProduct)wtContainer;
+							}
+							if (wtContainer instanceof WTLibrary){
+								containerTeamManaged = (WTLibrary)wtContainer;
+							}
+							ArrayList<Role> roles = new ArrayList<Role>();
+							try {
+								roles = WfRoleHelper.getRoleList();
+							} catch (WTException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							String[] roleArr = rolesStr.split("、");
+							for (int i = 0; i < roleArr.length; i++) {
+								String roleStr = roleArr[i];
+								for (int j = 0; j < roles.size(); j++) {
+									Role teamRole = roles.get(j);
+									String roleDispName = teamRole.getDisplay(Locale.CHINA);
+									if (roleDispName != null && roleDispName.equals(roleStr)) {
+										// 获取签审对象所在上下文，当前团队角色下的人员
+										List<WTPrincipal> principals = UserUtil
+												.getMembersOfContainerRole(containerTeamManaged, teamRole);
+										// 考虑到返工、不同审批节点具有相同角色的情况，重置角色人员
+										@SuppressWarnings("rawtypes")
+										Enumeration penum = team.getPrincipalTarget(wfRole);
+										while (penum.hasMoreElements()) {
+											WTPrincipalReference wtPrincipalReference = (WTPrincipalReference) penum
+													.nextElement();
+											WTPrincipal wtPrincipal = wtPrincipalReference
+													.getPrincipal();
+											TeamHelper.service.deleteRolePrincipalMap(wfRole,
+													wtPrincipal, team);
+										}
+										for (int k = 0; k < principals.size(); k++) {
+											WTPrincipal principal = principals.get(k);
+											UserUtil.setProcessRoleHolder(wfRole,
+													principal, self);
+										}
+									}
+								}
+							}
+						}
+			}
+							
+
 
 			
 		  public static <T> void test() throws com.google.gwt.rpc.client.impl.RemoteException, InvocationTargetException, WTException

@@ -37,33 +37,38 @@ public class ScheduleQueueUtil implements RemoteAccess, Serializable {
      * @throws WTException
      */
     @SuppressWarnings("deprecation")
-	public static boolean isScheduleItemExistByQueueName(String scheduleQueueName)
-            throws WTException {
-        boolean flag = false;
-        boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-        if (!RemoteMethodServer.ServerFlag) {
-            try {
-            	RemoteMethodServer.getDefault().invoke("isScheduleItemExistByQueueName", 
-            		ScheduleQueueUtil.class.getName(), null, new Class[] { String.class },
-            		new Object[] { scheduleQueueName});
-            } catch (RemoteException e) {
-                logger.error(e.getMessage(),e);
-            } catch (InvocationTargetException e) {
-            	logger.error(e.getMessage(),e);
-            }
-        } else {
-	        if(!StringUtils.isEmpty(scheduleQueueName)){
-		        QuerySpec queryspec = new QuerySpec(ScheduleItem.class);
-		        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.QUEUE_NAME, SearchCondition.EQUAL,
-		                scheduleQueueName));
-		        queryspec.appendOrderBy(ScheduleItem.class, ScheduleItem.START_DATE, true);
-		        QueryResult queryResult = PersistenceHelper.manager.find(queryspec);
-		        if (queryResult.hasMoreElements())
-		            flag = true;
+	public static boolean isScheduleItemExistByQueueName(String scheduleQueueName){
+    	try {
+	        if (!RemoteMethodServer.ServerFlag) {
+	            	RemoteMethodServer.getDefault().invoke("isScheduleItemExistByQueueName", 
+	            		ScheduleQueueUtil.class.getName(), null, new Class[] { String.class },
+	            		new Object[] { scheduleQueueName});
+	        } else {
+	        	boolean flag = false;
+	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+	        	try{
+			        if(!StringUtils.isEmpty(scheduleQueueName)){
+				        QuerySpec queryspec = new QuerySpec(ScheduleItem.class);
+				        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.QUEUE_NAME, SearchCondition.EQUAL,
+				                scheduleQueueName));
+				        queryspec.appendOrderBy(ScheduleItem.class, ScheduleItem.START_DATE, true);
+				        QueryResult queryResult = PersistenceHelper.manager.find(queryspec);
+				        if (queryResult.hasMoreElements())
+				            flag = true;
+			        }
+	        	} catch(WTException e){
+	        		logger.error(">>>>>"+e);
+	        	} finally{
+	        		SessionServerHelper.manager.setAccessEnforced(enforce);
+	        	}
+	        	return flag;
 	        }
-        }
-        SessionServerHelper.manager.setAccessEnforced(enforce);
-        return flag;
+    	} catch (RemoteException e) {
+    		logger.error(e.getMessage(),e);
+    	} catch (InvocationTargetException e) {
+    		logger.error(e.getMessage(),e);
+    	}
+        return false;
     }
     
     /**
@@ -75,35 +80,40 @@ public class ScheduleQueueUtil implements RemoteAccess, Serializable {
      * @throws WTException
      */
     @SuppressWarnings("deprecation")
-	public static boolean isScheduleItemExistByItemName(String scheduleItemName)
-            throws WTException {
-        boolean flag = false;
-        boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-        if (!RemoteMethodServer.ServerFlag) {
-            try {
-            	RemoteMethodServer.getDefault().invoke("isScheduleItemExistByItemName", 
-            		ScheduleQueueUtil.class.getName(), null, new Class[] { String.class },
-            		new Object[] { scheduleItemName});
-            } catch (RemoteException e) {
-                logger.error(e.getMessage(),e);
-            } catch (InvocationTargetException e) {
-            	logger.error(e.getMessage(),e);
-            }
-        } else {
-	        if(!StringUtils.isEmpty(scheduleItemName)){
-		        QuerySpec queryspec = new QuerySpec(ScheduleItem.class);
-		        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.ITEM_NAME, SearchCondition.EQUAL,
-		        		scheduleItemName));
-		        queryspec.appendOrderBy(ScheduleItem.class, ScheduleItem.START_DATE, true);
-		
-		        QueryResult queryResult = PersistenceHelper.manager.find(queryspec);
-		
-		        if (queryResult.hasMoreElements())
-		            flag = true;
+	public static boolean isScheduleItemExistByItemName(String scheduleItemName){
+    	try {
+	        if (!RemoteMethodServer.ServerFlag) {
+	            	RemoteMethodServer.getDefault().invoke("isScheduleItemExistByItemName", 
+	            		ScheduleQueueUtil.class.getName(), null, new Class[] { String.class },
+	            		new Object[] { scheduleItemName});
+	        } else {
+	        	boolean flag = false;
+	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+	        	try{
+			        if(!StringUtils.isEmpty(scheduleItemName)){
+				        QuerySpec queryspec = new QuerySpec(ScheduleItem.class);
+				        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.ITEM_NAME, SearchCondition.EQUAL,
+				        		scheduleItemName));
+				        queryspec.appendOrderBy(ScheduleItem.class, ScheduleItem.START_DATE, true);
+				
+				        QueryResult queryResult = PersistenceHelper.manager.find(queryspec);
+				
+				        if (queryResult.hasMoreElements())
+				            flag = true;
+			        }
+	        	} catch(WTException e){
+	        		logger.error(">>>>>"+e);
+	        	} finally{
+	        		SessionServerHelper.manager.setAccessEnforced(enforce);
+	        	}
+	        	return flag;
 	        }
-        }
-        SessionServerHelper.manager.setAccessEnforced(enforce);
-        return flag;
+    	} catch (RemoteException e) {
+    		logger.error(e.getMessage(),e);
+    	} catch (InvocationTargetException e) {
+    		logger.error(e.getMessage(),e);
+    	}
+        return false;
     }
     
     /**
@@ -113,33 +123,38 @@ public class ScheduleQueueUtil implements RemoteAccess, Serializable {
      * @throws WTException
      */
     @SuppressWarnings("deprecation")
-	public static boolean isScheduleItemExistByItem(ScheduleItem scheduleItem)
-            throws WTException {
-        boolean flag = false;
-        boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-        if (!RemoteMethodServer.ServerFlag) {
-            try {
-            	RemoteMethodServer.getDefault().invoke("isScheduleItemExistByItem", 
-            		ScheduleQueueUtil.class.getName(), null, new Class[] { ScheduleItem.class },
-            		new Object[] { scheduleItem});
-            } catch (RemoteException e) {
-                logger.error(e.getMessage(),e);
-            } catch (InvocationTargetException e) {
-            	logger.error(e.getMessage(),e);
-            }
-        } else {
-	        if(scheduleItem!=null){
-		        QuerySpec queryspec = new QuerySpec(ScheduleItem.class);
-		        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.ITEM_NAME, SearchCondition.EQUAL,
-		        		scheduleItem.getQueueName()));
-		        queryspec.appendOrderBy(ScheduleItem.class, ScheduleItem.START_DATE, true);
-		        QueryResult queryResult = PersistenceHelper.manager.find(queryspec);
-		        if (queryResult.hasMoreElements())
-		            flag = true;
+	public static boolean isScheduleItemExistByItem(ScheduleItem scheduleItem){
+    	try {
+	        if (!RemoteMethodServer.ServerFlag) {
+	            	RemoteMethodServer.getDefault().invoke("isScheduleItemExistByItem", 
+	            		ScheduleQueueUtil.class.getName(), null, new Class[] { ScheduleItem.class },
+	            		new Object[] { scheduleItem});
+	        } else {
+	        	boolean flag = false;
+	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+	        	try{
+			        if(scheduleItem!=null){
+				        QuerySpec queryspec = new QuerySpec(ScheduleItem.class);
+				        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.ITEM_NAME, SearchCondition.EQUAL,
+				        		scheduleItem.getQueueName()));
+				        queryspec.appendOrderBy(ScheduleItem.class, ScheduleItem.START_DATE, true);
+				        QueryResult queryResult = PersistenceHelper.manager.find(queryspec);
+				        if (queryResult.hasMoreElements())
+				            flag = true;
+			        }
+	        	} catch(WTException e){
+	        		logger.error(">>>>>"+e);
+	        	} finally{
+	        		SessionServerHelper.manager.setAccessEnforced(enforce);
+	        	}
+	        	return flag;
 	        }
-        }
-        SessionServerHelper.manager.setAccessEnforced(enforce);
-        return flag;
+    	} catch (RemoteException e) {
+    		logger.error(e.getMessage(),e);
+    	} catch (InvocationTargetException e) {
+    		logger.error(e.getMessage(),e);
+    	}
+        return false;
     }
     
     /**
@@ -149,36 +164,41 @@ public class ScheduleQueueUtil implements RemoteAccess, Serializable {
      * @throws WTException
      */
     @SuppressWarnings("deprecation")
-	public static boolean isScheduleItemExist(String scheduleItemName,String scheduleQueueName)
-            throws WTException {
-        boolean flag = false;
-        boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-        if (!RemoteMethodServer.ServerFlag) {
-            try {
-            	RemoteMethodServer.getDefault().invoke("isScheduleItemExist", 
-            		ScheduleQueueUtil.class.getName(), null, new Class[] { String.class,String.class },
-            		new Object[] { scheduleItemName,scheduleQueueName});
-            } catch (RemoteException e) {
-                logger.error(e.getMessage(),e);
-            } catch (InvocationTargetException e) {
-            	logger.error(e.getMessage(),e);
-            }
-        } else {
-	        if(!StringUtils.isEmpty(scheduleItemName) && !StringUtils.isEmpty(scheduleQueueName)){
-		        QuerySpec queryspec = new QuerySpec(ScheduleItem.class);
-		        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.ITEM_NAME, SearchCondition.EQUAL,
-		        		scheduleItemName));
-		        queryspec.appendAnd();
-		        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.QUEUE_NAME, SearchCondition.EQUAL,
-		        		scheduleQueueName));
-		        queryspec.appendOrderBy(ScheduleItem.class, ScheduleItem.START_DATE, true);
-		        QueryResult queryResult = PersistenceHelper.manager.find(queryspec);
-		        if (queryResult.hasMoreElements())
-		            flag = true;
+	public static boolean isScheduleItemExist(String scheduleItemName,String scheduleQueueName){
+    	try {
+	        if (!RemoteMethodServer.ServerFlag) {
+	            	RemoteMethodServer.getDefault().invoke("isScheduleItemExist", 
+	            		ScheduleQueueUtil.class.getName(), null, new Class[] { String.class,String.class },
+	            		new Object[] { scheduleItemName,scheduleQueueName});
+	        } else {
+	        	boolean flag = false;
+	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+	        	try{
+			        if(!StringUtils.isEmpty(scheduleItemName) && !StringUtils.isEmpty(scheduleQueueName)){
+				        QuerySpec queryspec = new QuerySpec(ScheduleItem.class);
+				        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.ITEM_NAME, SearchCondition.EQUAL,
+				        		scheduleItemName));
+				        queryspec.appendAnd();
+				        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.QUEUE_NAME, SearchCondition.EQUAL,
+				        		scheduleQueueName));
+				        queryspec.appendOrderBy(ScheduleItem.class, ScheduleItem.START_DATE, true);
+				        QueryResult queryResult = PersistenceHelper.manager.find(queryspec);
+				        if (queryResult.hasMoreElements())
+				            flag = true;
+			        }
+	        	} catch(WTException e){
+	        		logger.error(">>>>>"+e);
+	        	} finally{
+	        		SessionServerHelper.manager.setAccessEnforced(enforce);
+	        	}
+	        	return flag;
 	        }
-        }
-        SessionServerHelper.manager.setAccessEnforced(enforce);
-        return flag;
+    	} catch (RemoteException e) {
+    		logger.error(e.getMessage(),e);
+    	} catch (InvocationTargetException e) {
+    		logger.error(e.getMessage(),e);
+    	}
+        return false;
     }
 
 	/**
@@ -190,39 +210,43 @@ public class ScheduleQueueUtil implements RemoteAccess, Serializable {
      * @throws WTException
      */
 	@SuppressWarnings("deprecation")
-	public static ScheduleItem getScheduleItem(String scheduleQueueName, String scheduleItemName)
-            throws WTException {
-        ScheduleItem scheduleItem = null;
-        boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-        if (!RemoteMethodServer.ServerFlag) {
-            try {
-                return (ScheduleItem) RemoteMethodServer.getDefault().invoke("getScheduleItem", 
-                		ScheduleQueueUtil.class.getName(), null, new Class[] { String.class, 
-                	String.class},new Object[] { scheduleQueueName, scheduleItemName});
-            } catch (RemoteException e) {
-                logger.error(e.getMessage(),e);
-            } catch (InvocationTargetException e) {
-            	logger.error(e.getMessage(),e);
-            }
-        } else {
-        	QuerySpec queryspec = new QuerySpec(ScheduleItem.class);
-	        if(!StringUtils.isEmpty(scheduleItemName) && isScheduleItemExistByItemName(scheduleItemName)
-	        		&& !StringUtils.isEmpty(scheduleQueueName) && isScheduleItemExistByQueueName(scheduleQueueName)){
-		        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.ITEM_NAME, SearchCondition.EQUAL,
-		                scheduleItemName));
-		        queryspec.appendAnd();
-		        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.QUEUE_NAME, SearchCondition.EQUAL,
-		                scheduleQueueName));
+	public static ScheduleItem getScheduleItem(String scheduleQueueName, String scheduleItemName){
+		try {
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (ScheduleItem) RemoteMethodServer.getDefault().invoke("getScheduleItem", 
+	                		ScheduleQueueUtil.class.getName(), null, new Class[] { String.class, 
+	                	String.class},new Object[] { scheduleQueueName, scheduleItemName});
+	        } else {
+	        	ScheduleItem scheduleItem = null;
+	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+	        	try{
+		        	QuerySpec queryspec = new QuerySpec(ScheduleItem.class);
+			        if(!StringUtils.isEmpty(scheduleItemName) && isScheduleItemExistByItemName(scheduleItemName)
+			        		&& !StringUtils.isEmpty(scheduleQueueName) && isScheduleItemExistByQueueName(scheduleQueueName)){
+				        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.ITEM_NAME, SearchCondition.EQUAL,
+				                scheduleItemName));
+				        queryspec.appendAnd();
+				        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.QUEUE_NAME, SearchCondition.EQUAL,
+				                scheduleQueueName));
+			        }
+				    queryspec.appendOrderBy(ScheduleItem.class, ScheduleItem.START_DATE, true);
+				    QueryResult queryResult = PersistenceHelper.manager.find(queryspec);
+			        if (queryResult.hasMoreElements()){
+			            scheduleItem = (ScheduleItem) queryResult.nextElement();
+			        }
+	        	} catch(WTException e){
+	        		logger.error(">>>>>"+e);
+	        	} finally{
+	        		SessionServerHelper.manager.setAccessEnforced(enforce);
+	        	}
+	        	return scheduleItem;
 	        }
-		    queryspec.appendOrderBy(ScheduleItem.class, ScheduleItem.START_DATE, true);
-		
-		    QueryResult queryResult = PersistenceHelper.manager.find(queryspec);
-		
-	        if (queryResult.hasMoreElements())
-	            scheduleItem = (ScheduleItem) queryResult.nextElement();
-        }
-        SessionServerHelper.manager.setAccessEnforced(enforce);
-        return scheduleItem;
+		} catch (RemoteException e) {
+			logger.error(e.getMessage(),e);
+		} catch (InvocationTargetException e) {
+			logger.error(e.getMessage(),e);
+		}
+        return null;
     }
 	
 	/**
@@ -232,35 +256,41 @@ public class ScheduleQueueUtil implements RemoteAccess, Serializable {
 	 * @throws WTException
 	 */
 	@SuppressWarnings("deprecation")
-	public static ScheduleItem getScheduleItemByItemName(String scheduleItemName)
-            throws WTException {
-        ScheduleItem scheduleItem = null;
-        boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-        if (!RemoteMethodServer.ServerFlag) {
-            try {
-                return (ScheduleItem) RemoteMethodServer.getDefault().invoke("getScheduleItemByItemName", 
-                		ScheduleQueueUtil.class.getName(), null, new Class[] { String.class},
-                		new Object[] {scheduleItemName});
-            } catch (RemoteException e) {
-                logger.error(e.getMessage(),e);
-            } catch (InvocationTargetException e) {
-            	logger.error(e.getMessage(),e);
-            }
-        } else {
-        	QuerySpec queryspec = new QuerySpec(ScheduleItem.class);
-	        if(!StringUtils.isEmpty(scheduleItemName) && isScheduleItemExistByItemName(scheduleItemName)){
-		        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.ITEM_NAME, SearchCondition.EQUAL,
-		                scheduleItemName));
+	public static ScheduleItem getScheduleItemByItemName(String scheduleItemName){
+		try {
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (ScheduleItem) RemoteMethodServer.getDefault().invoke("getScheduleItemByItemName", 
+	                		ScheduleQueueUtil.class.getName(), null, new Class[] { String.class},
+	                		new Object[] {scheduleItemName});
+	        } else {
+	        	ScheduleItem scheduleItem = null;
+	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+	        	try{
+		        	QuerySpec queryspec = new QuerySpec(ScheduleItem.class);
+			        if(!StringUtils.isEmpty(scheduleItemName) && isScheduleItemExistByItemName(scheduleItemName)){
+				        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.ITEM_NAME, SearchCondition.EQUAL,
+				                scheduleItemName));
+			        }
+				    queryspec.appendOrderBy(ScheduleItem.class, ScheduleItem.START_DATE, true);
+				
+				    QueryResult queryResult = PersistenceHelper.manager.find(queryspec);
+				
+			        while (queryResult.hasMoreElements()){
+			            scheduleItem = (ScheduleItem) queryResult.nextElement();
+			        }
+	        	} catch(WTException e){
+	        		logger.error(">>>>>"+e);
+	        	} finally{
+	        		SessionServerHelper.manager.setAccessEnforced(enforce);
+	        	}
+	        	return scheduleItem;
 	        }
-		    queryspec.appendOrderBy(ScheduleItem.class, ScheduleItem.START_DATE, true);
-		
-		    QueryResult queryResult = PersistenceHelper.manager.find(queryspec);
-		
-	        while (queryResult.hasMoreElements())
-	            scheduleItem = (ScheduleItem) queryResult.nextElement();
-        }
-        SessionServerHelper.manager.setAccessEnforced(enforce);
-        return scheduleItem;
+		} catch (RemoteException e) {
+			logger.error(e.getMessage(),e);
+		} catch (InvocationTargetException e) {
+			logger.error(e.getMessage(),e);
+		}
+        return null;
     }
 	
 	/**
@@ -270,35 +300,39 @@ public class ScheduleQueueUtil implements RemoteAccess, Serializable {
 	 * @throws WTException
 	 */
 	@SuppressWarnings("deprecation")
-	public static ScheduleItem getScheduleItemByQueueName(String scheduleQueueName)
-            throws WTException {
-        ScheduleItem scheduleItem = null;
-        boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-        if (!RemoteMethodServer.ServerFlag) {
-            try {
-                return (ScheduleItem) RemoteMethodServer.getDefault().invoke("getScheduleItemByQueueName", 
-                		ScheduleQueueUtil.class.getName(), null, new Class[] { String.class},
-                		new Object[] {scheduleQueueName});
-            } catch (RemoteException e) {
-                logger.error(e.getMessage(),e);
-            } catch (InvocationTargetException e) {
-            	logger.error(e.getMessage(),e);
-            }
-        } else {
-        	QuerySpec queryspec = new QuerySpec(ScheduleItem.class);
-	        if(!StringUtils.isEmpty(scheduleQueueName) && isScheduleItemExistByQueueName(scheduleQueueName)){
-		        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.QUEUE_NAME, SearchCondition.EQUAL,
-		        		scheduleQueueName));
+	public static ScheduleItem getScheduleItemByQueueName(String scheduleQueueName){
+		try {
+	        if (!RemoteMethodServer.ServerFlag) {
+	                return (ScheduleItem) RemoteMethodServer.getDefault().invoke("getScheduleItemByQueueName", 
+	                		ScheduleQueueUtil.class.getName(), null, new Class[] { String.class},
+	                		new Object[] {scheduleQueueName});
+	        } else {
+	        	ScheduleItem scheduleItem = null;
+	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+	        	try{
+		        	QuerySpec queryspec = new QuerySpec(ScheduleItem.class);
+			        if(!StringUtils.isEmpty(scheduleQueueName) && isScheduleItemExistByQueueName(scheduleQueueName)){
+				        queryspec.appendWhere(new SearchCondition(ScheduleItem.class, ScheduleItem.QUEUE_NAME, SearchCondition.EQUAL,
+				        		scheduleQueueName));
+			        }
+				    queryspec.appendOrderBy(ScheduleItem.class, ScheduleItem.START_DATE, true);
+				    QueryResult queryResult = PersistenceHelper.manager.find(queryspec);
+			        while (queryResult.hasMoreElements()){
+			            scheduleItem = (ScheduleItem) queryResult.nextElement();
+			        }
+	        	} catch(WTException e){
+	        		logger.error(">>>>>"+e);
+	        	} finally{
+	        		SessionServerHelper.manager.setAccessEnforced(enforce);
+	        	}
+		        return scheduleItem;
 	        }
-		    queryspec.appendOrderBy(ScheduleItem.class, ScheduleItem.START_DATE, true);
-		
-		    QueryResult queryResult = PersistenceHelper.manager.find(queryspec);
-		
-	        while (queryResult.hasMoreElements())
-	            scheduleItem = (ScheduleItem) queryResult.nextElement();
-        }
-        SessionServerHelper.manager.setAccessEnforced(enforce);
-        return scheduleItem;
+		} catch (RemoteException e) {
+			logger.error(e.getMessage(),e);
+		} catch (InvocationTargetException e) {
+			logger.error(e.getMessage(),e);
+		}
+        return null;
     }
 	
     public static void test() throws RemoteException, InvocationTargetException, WTException{

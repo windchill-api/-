@@ -1,6 +1,7 @@
 package cn.elead.tool.wc;
 
 import java.lang.reflect.InvocationTargetException;
+import java.rmi.RemoteException;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,7 @@ public class ProductUtil implements RemoteAccess {
 					WTPrincipal currentPrincipal = SessionHelper.manager.getPrincipal();
 					try {
 						
-						WTOrganization wtOrg = UserUtil.getWTOrganization(orgName);
+						WTOrganization wtOrg = OrganizationUtil.getWTOrganization(orgName);
 						WTContainerRef orgContainerRef = WTContainerHelper.service
 								.getOrgContainerRef(wtOrg);
 			
@@ -149,16 +150,30 @@ public class ProductUtil implements RemoteAccess {
 	}
 
 	public static boolean isPDMLinkProductExist(String name){
-		
-		PDMLinkProduct pdmLinkProduct = null;
-		if(!StringUtils.isEmpty(name)){
-			pdmLinkProduct =getPDMLinkProductByName(name, false);
-		}
-		if(pdmLinkProduct == null){
-			return false;
-		}else{
-		    return true;
-		}
+		 try{
+		        if (!RemoteMethodServer.ServerFlag) {
+		                return (boolean) RemoteMethodServer.getDefault().invoke("isPDMLinkProductExist", 
+		                		ProductUtil.class.getName(), null, new Class[] { String.class},
+		                		new Object[] { name });
+		        } else {
+		        	WTOrganization org = null;
+		        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+					PDMLinkProduct pdmLinkProduct = null;
+					if(!StringUtils.isEmpty(name)){
+						pdmLinkProduct =getPDMLinkProductByName(name, false);
+					}
+					if(pdmLinkProduct == null){
+						return false;
+					}else{
+					    return true;
+					}
+		        }
+	        } catch (RemoteException e) {
+	            LOGGER.error(e.getMessage(),e);
+	        } catch (InvocationTargetException e) {
+	        	LOGGER.error(e.getMessage(),e);
+	        }
+	        return false;
 	}
 	public static PDMLinkProduct getPDMLinkProductByName(String name,boolean accessControlled){
 			 try {   

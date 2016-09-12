@@ -11,6 +11,9 @@ import wt.doc.WTDocument;
 import wt.fc.Persistable;
 import wt.fc.PersistenceHelper;
 import wt.fc.PersistenceServerHelper;
+import wt.fc.collections.WTArrayList;
+import wt.fc.collections.WTHashSet;
+import wt.fc.collections.WTSet;
 import wt.folder.Folder;
 import wt.folder.FolderHelper;
 import wt.inf.container.WTContainer;
@@ -26,20 +29,19 @@ import wt.session.SessionServerHelper;
 import wt.type.TypeDefinitionReference;
 import wt.type.TypedUtility;
 import wt.util.WTException;
+import wt.util.WTPropertyVetoException;
+import wt.vc.baseline.BaselineHelper;
 
 import com.google.gwt.rpc.client.impl.RemoteException;
-import com.ptc.core.components.forms.FormResult;
 import com.ptc.core.lwc.server.PersistableAdapter;
 import com.ptc.core.meta.common.UpdateOperationIdentifier;
 
 public class PromotionUtil  implements RemoteAccess{
-	  public static WTContainerRef getWTContainerref(WTContainer wtcontainer) throws WTException
-	  {
+	  public static WTContainerRef getWTContainerref(WTContainer wtcontainer) throws WTException{
 	    return WTContainerRef.newWTContainerRef(wtcontainer);
 	  }
 	  public static PromotionNotice createPromotionRequest(String number, String name, String objType, String desciption, WTContainer container, Folder folder, String targetState, Map<String, Object> mbaMap)
-	    throws WTException
-	  {
+	    throws WTException{
 		  try {   
 	            if (!RemoteMethodServer.ServerFlag) {   
 	                return (PromotionNotice) RemoteMethodServer.getDefault().invoke("createPromotionRequest", UserUtil.class.getName(), null,   
@@ -116,10 +118,9 @@ public class PromotionUtil  implements RemoteAccess{
 	      obj.apply();
 	      PersistenceServerHelper.manager.update(per);
 	  }
-	 /* 
+	  
 	  public PromotionNotice addPromotable(PromotionNotice promotion, WTArrayList promotableList)
-	    throws WTException
-	  {
+	    throws WTException{
 	    boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 	    try {
 	      MaturityBaseline maturityBaseline = null;
@@ -144,19 +145,6 @@ public class PromotionUtil  implements RemoteAccess{
 	  }
 	
 	 
-	
-	  public Folder getFolder(WTContainerRef containerRef, String folder1)
-	    throws WTException
-	  {
-	    String folder = folder1;
-	    if (!folder.startsWith("/")) {
-	      folder = "/" + folder;
-	    }
-	    if (folder.indexOf("Default") == -1) {
-	      folder = "/Default" + folder;
-	    }
-	    return FolderHelper.service.getFolder(folder, containerRef);
-	  }*/
 	 
 	 public static <T> void test() throws RemoteException,InvocationTargetException, WTException  {  
 		 
@@ -166,7 +154,7 @@ public class PromotionUtil  implements RemoteAccess{
 		 String path = "产品 /测试产品 /test_BJJ";
 		 Folder folder = FolderUtil.getFolder(wtcontainer, path);
 		 Map<String, Object> map=new HashMap<String,Object>();
-		 WTDocument value = DocUtil.getDoc("1001", false);
+		 WTDocument value = DocUtil.getDocumentByNumber("1001");
          map.put("number",value);
 		 createPromotionRequest("1002", "bjj_createPromotionRequest", "wt.maturity.PromotionNotice", path, wtcontainer, folder , "INWORK", map);
 		 

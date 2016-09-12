@@ -40,14 +40,14 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	 */
 	@SuppressWarnings("deprecation")
 	public static boolean isWTOrganizationExistByName(String name) {
-        boolean flag = false;
-        boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
         try{
 	        if (!RemoteMethodServer.ServerFlag) {
 	                return (boolean) RemoteMethodServer.getDefault().invoke("isWTOrganizationExistByName", 
 	                		OrganizationUtil.class.getName(), null, new Class[] { String.class},
 	                		new Object[] { name });
 	        } else {
+	        	boolean flag = false;
+	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 		        try{
 		        	if(!StringUtils.isEmpty(name)){
 				        QuerySpec criteria = new QuerySpec(WTOrganization.class);
@@ -60,16 +60,17 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 		        	}
 				}catch(WTException e){
 					logger.error(">>>>>"+e);
-				}
+				}finally {
+		            SessionServerHelper.manager.setAccessEnforced(enforce);
+		        }
+		        return flag;
 	        }
         } catch (RemoteException e) {
             logger.error(e.getMessage(),e);
         } catch (InvocationTargetException e) {
         	logger.error(e.getMessage(),e);
-        } finally {
-            SessionServerHelper.manager.setAccessEnforced(enforce);
         }
-        return flag;
+		return false; 
     }
 	
 	/**
@@ -81,14 +82,14 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	 */
 	@SuppressWarnings("deprecation")
 	public static boolean isWTOrganizationExistByOrg(WTOrganization org) {
-        boolean flag = false;
-        boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
         try{
 	        if (!RemoteMethodServer.ServerFlag) {
 	                return (boolean) RemoteMethodServer.getDefault().invoke("isWTOrganizationExistByOrg", 
 	                		OrganizationUtil.class.getName(), null, new Class[] { WTOrganization.class},
 	                		new Object[] { org });
 	        } else {
+	        	boolean flag = false;
+	            boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 		        try{
 		        	if(org!=null){
 				        QuerySpec criteria = new QuerySpec(WTOrganization.class);
@@ -99,18 +100,19 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 				            flag = true;
 				        }
 		        	}
-				}catch(WTException e){
+				} catch(WTException e){
 					logger.error(">>>>>"+e);
-				}
+				} finally {
+		            SessionServerHelper.manager.setAccessEnforced(enforce);
+		        }
+		        return flag;
 	        }
         } catch (RemoteException e) {
             logger.error(e.getMessage(),e);
         } catch (InvocationTargetException e) {
         	logger.error(e.getMessage(),e);
-        } finally {
-            SessionServerHelper.manager.setAccessEnforced(enforce);
         }
-        return flag;
+        return false;
     }
 	
 	/**
@@ -122,15 +124,14 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	 */
 	@SuppressWarnings("deprecation")
 	public static WTOrganization getWTOrganization(String name) {
-        WTOrganization org = null;
-        boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
         try{
 	        if (!RemoteMethodServer.ServerFlag) {
 	                return (WTOrganization) RemoteMethodServer.getDefault().invoke("getWTOrganization", 
 	                		OrganizationUtil.class.getName(), null, new Class[] { String.class},
 	                		new Object[] { name });
-	           
 	        } else {
+	        	WTOrganization org = null;
+	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 		        try{
 		        	if(!StringUtils.isEmpty(name) && isWTOrganizationExistByName(name)){
 				        QuerySpec criteria = new QuerySpec(WTOrganization.class);
@@ -141,18 +142,19 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 				            org = (WTOrganization) results.nextElement();
 				        }
 		        	}
-				}catch(WTException e){
+				} catch(WTException e){
 					logger.error(">>>>>"+e);
-				}
+				} finally {
+		            SessionServerHelper.manager.setAccessEnforced(enforce);
+		        }
+		        return org;
 	        }
         } catch (RemoteException e) {
             logger.error(e.getMessage(),e);
         } catch (InvocationTargetException e) {
         	logger.error(e.getMessage(),e);
-        } finally {
-            SessionServerHelper.manager.setAccessEnforced(enforce);
         }
-        return org;
+        return null;
     }
 	
 	/**
@@ -165,14 +167,14 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	 */
 	@SuppressWarnings("deprecation")
 	public static OrgContainer getOrgContainer(String name) throws WTException {
-        OrgContainer org = null;
-        boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
         try {
             if (!RemoteMethodServer.ServerFlag) {
                 return (OrgContainer) RemoteMethodServer.getDefault().invoke("getOrgContainer",
                         OrganizationUtil.class.getName(), null, new Class[] { String.class },
                         new Object[] { name });
             }else {
+            	OrgContainer org = null;
+                boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
                 try {
                 	if(!StringUtils.isEmpty(name)){
 	                    QuerySpec criteria = new QuerySpec(OrgContainer.class);
@@ -185,16 +187,17 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
                 	}
                 } catch(Exception e) {
                     logger.error(">>>>>"+e);
+                } finally {
+                    SessionServerHelper.manager.setAccessEnforced(enforce);
                 }
+                return org;
             }
         } catch (RemoteException exception) {
             logger.debug(exception.getMessage(),exception);
         } catch (InvocationTargetException exception) {
             logger.debug(exception.getMessage(),exception);
-        } finally {
-            SessionServerHelper.manager.setAccessEnforced(enforce);
         }
-        return org;
+        return null;
     }
 	
 	/**
@@ -206,8 +209,6 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	 */
 	@SuppressWarnings("deprecation")
 	public static WTOrganization createWTOrg(String name) {
-        WTOrganization org = null;
-        boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
         try{
 	        if (!RemoteMethodServer.ServerFlag) {
 	                return (WTOrganization) RemoteMethodServer.getDefault().invoke("createWTOrg", 
@@ -215,30 +216,32 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	                		new Object[] { name });
 	          
 	        } else {
-		        if(!StringUtils.isEmpty(name)){
-			        org = getWTOrganization(name);
-			        if (org == null) {
-			        	try{
-					            org = WTOrganization.newWTOrganization(name);
-					            org.setAdministrator(SessionHelper.manager.getPrincipalReference());
-					            org.setConferencingURL(null);
-					            org = (WTOrganization) OrganizationServicesHelper.manager.savePrincipal(org);
-					            PersistenceHelper.manager.save(org);
-			        	}catch(WTException e){
-			        		logger.error(">>>>>"+e);
-			        	}
+	        	WTOrganization org = null;
+	            boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+	            try{
+			        if(!StringUtils.isEmpty(name)){
+				        org = getWTOrganization(name);
+				        if (org == null) {
+				            org = WTOrganization.newWTOrganization(name);
+				            org.setAdministrator(SessionHelper.manager.getPrincipalReference());
+				            org.setConferencingURL(null);
+				            org = (WTOrganization) OrganizationServicesHelper.manager.savePrincipal(org);
+				            PersistenceHelper.manager.save(org);
+				        }
 			        }
-		        }
-		        SessionServerHelper.manager.setAccessEnforced(enforce);
+	            } catch(WTException e){
+	            	logger.error(">>>>>"+e);
+	            } finally {
+	            	SessionServerHelper.manager.setAccessEnforced(enforce);
+	            }
+	            return org;
 	        }
         } catch (RemoteException exception) {
             logger.debug(exception.getMessage(),exception);
         } catch (InvocationTargetException exception) {
             logger.debug(exception.getMessage(),exception);
-        } finally {
-            SessionServerHelper.manager.setAccessEnforced(enforce);
         }
-        return org;
+        return null;
     }
 	
 	/**
@@ -249,7 +252,6 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	 * 		else there is nothing to do
 	 */
 	public static void updateWTOrg(String name,String reName) {
-		boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
         try{
 	        if (!RemoteMethodServer.ServerFlag) {
 	                RemoteMethodServer.getDefault().invoke("updateWTOrg", 
@@ -257,27 +259,28 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	                		new Object[] { name,reName });
 	          
 	        } else {
-		        if(!StringUtils.isEmpty(name)&& !StringUtil.isEmpty(reName)){
-		        	WTOrganization org = getWTOrganization(name);
-		        	WTOrganization org1 = getWTOrganization(reName);
-			        if (org != null && org1==null) {
-			        	try{
-							org.setName(reName);
-				            PersistenceHelper.manager.save(org);
-			        	}catch(WTException e){
-			        		logger.error(">>>>>"+e);
-			        	} catch (WTPropertyVetoException e) {
-			        		logger.error(">>>>>"+e);
-						}
+	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+	        	try{
+			        if(!StringUtils.isEmpty(name)&& !StringUtil.isEmpty(reName)){
+			        	WTOrganization org = getWTOrganization(name);
+			        	WTOrganization org1 = getWTOrganization(reName);
+				        if (org != null && org1==null) {
+								org.setName(reName);
+					            PersistenceHelper.manager.save(org);
+				        }
 			        }
-		        }
+	        	}catch(WTException e){
+	        		logger.error(">>>>>"+e);
+	        	} catch (WTPropertyVetoException e) {
+	        		logger.error(">>>>>"+e);
+	        	} finally {
+	                SessionServerHelper.manager.setAccessEnforced(enforce);
+	            }
 	        }
-        }catch (RemoteException exception) {
+        } catch (RemoteException exception) {
             logger.debug(exception.getMessage(),exception);
         } catch (InvocationTargetException exception) {
             logger.debug(exception.getMessage(),exception);
-        } finally {
-            SessionServerHelper.manager.setAccessEnforced(enforce);
         }
     }
 	
@@ -324,5 +327,4 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 					new Object[] {});
 		}
 	}
-	
 }
