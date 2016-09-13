@@ -10,6 +10,8 @@ import org.apache.log4j.Logger;
 
 import wt.doc.WTDocument;
 import wt.fc.Persistable;
+import wt.fc.PersistenceHelper;
+import wt.fc.QueryResult;
 import wt.fc.ReferenceFactory;
 import wt.fc.WTReference;
 import wt.inf.container.WTContainer;
@@ -18,6 +20,8 @@ import wt.log4j.LogR;
 import wt.method.RemoteAccess;
 import wt.method.RemoteMethodServer;
 import wt.part.WTPart;
+import wt.query.QuerySpec;
+import wt.query.SearchCondition;
 import wt.session.SessionServerHelper;
 import wt.util.WTException;
 
@@ -314,5 +318,27 @@ public class WCUtil implements RemoteAccess, Serializable {
         return null;
     }
     
-	
+	/**
+	 * getWTContainerByName
+	 * 
+	 * @author zhangxj
+	 * @param name
+	 * @return WTContainer
+	 * @throws WTException
+	 */
+	@SuppressWarnings("deprecation")
+	public static WTContainer getWTContainerByName(String name)
+			throws WTException {
+		QuerySpec qs = new QuerySpec(WTContainer.class);
+		SearchCondition sc = new SearchCondition(WTContainer.class,
+				WTContainer.NAME, SearchCondition.EQUAL, name);
+		qs.appendSearchCondition(sc);
+		QueryResult qr = PersistenceHelper.manager.find(qs);
+		if (qr != null && qr.size() == 1) {
+			return (WTContainer) qr.nextElement();
+		} else {
+			throw new WTException("WTContainer name:" + name
+					+ " has more than one container or no container!");
+		}
+	}
 }

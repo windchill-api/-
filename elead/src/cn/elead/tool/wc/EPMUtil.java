@@ -1,6 +1,7 @@
 package cn.elead.tool.wc;
 
 import java.lang.reflect.InvocationTargetException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +29,8 @@ import wt.part.PartDocHelper;
 import wt.part.WTPart;
 import wt.part.WTPartMaster;
 import wt.pds.StatementSpec;
+import wt.query.ClassAttribute;
+import wt.query.OrderBy;
 import wt.query.QuerySpec;
 import wt.query.SearchCondition;
 import wt.query.WhereExpression;
@@ -242,7 +245,7 @@ public class EPMUtil implements RemoteAccess {
 					String oldFolder = epm.getLocation();
 					String oldContext = epm.getContainerName();
 					String folder = folder1;
-					WTContainer wtcontainer = getWTContainerByName(oldContext);
+					WTContainer wtcontainer =WCUtil.getWTContainerByName(oldContext);
 					WTContainerRef wtcRef = WTContainerRef
 							.newWTContainerRef(wtcontainer);
 					LOGGER.debug("图纸:" + epm.getNumber() + "原有的存储路径为...."
@@ -738,26 +741,5 @@ public class EPMUtil implements RemoteAccess {
 		return null;
 	}
 
-	/**
-	 * getWTContainerByName
-	 * 
-	 * @author zhangxj
-	 * @param name
-	 * @return WTContainer
-	 * @throws WTException
-	 */
-	public static WTContainer getWTContainerByName(String name)
-			throws WTException {
-		QuerySpec qs = new QuerySpec(WTContainer.class);
-		SearchCondition sc = new SearchCondition(WTContainer.class,
-				WTContainer.NAME, SearchCondition.EQUAL, name);
-		qs.appendSearchCondition(sc);
-		QueryResult qr = PersistenceHelper.manager.find(qs);
-		if (qr != null && qr.size() == 1) {
-			return (WTContainer) qr.nextElement();
-		} else {
-			throw new WTException("WTContainer name:" + name
-					+ " has more than one container or no container!");
-		}
-	}
+
 }
