@@ -23,11 +23,13 @@ import wt.session.SessionServerHelper;
 import wt.util.WTException;
 import wt.util.WTInvalidParameterException;
 import wt.util.WTRuntimeException;
-import wt.vc.sessioniteration.sessioniterationResource;
 
-import com.google.gwt.rpc.client.impl.RemoteException;
-import com.ptc.cat.entity.client.Exception;
-
+/**
+ * 团队的查找，添加角色，参与者，以及删除角色和参与者
+ * @author zhangxj
+ * @version
+ *
+ */
 public class TeamUtil implements RemoteAccess {
 
 	private static final String CLASSNAME = TeamUtil.class.getName();
@@ -35,36 +37,29 @@ public class TeamUtil implements RemoteAccess {
 	/**
 	 * 获取某上下文中某个角色下的人员
 	 * 
-	 * @author Seelen Chron
+	 * @author zhangxj
 	 * @param ctm
 	 * @param role
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public static List<WTPrincipal> getMembersOfContainerRole(
-			ContainerTeamManaged ctm, Role role) {
+	public static List<WTPrincipal> getMembersOfContainerRole(ContainerTeamManaged ctm, Role role) {
 		try {
 			if (!RemoteMethodServer.ServerFlag) {
 				String method = "getMembersOfContainerRole";
 				Class[] types = { ContainerTeamManaged.class, Role.class };
 				Object[] vals = { ctm, role };
-				return (ArrayList) RemoteMethodServer.getDefault().invoke(
-						method, CLASSNAME, null, types, vals);
+				return (List<WTPrincipal>) RemoteMethodServer.getDefault().invoke(method, CLASSNAME, null, types, vals);
 			} else {
-				boolean isAccessEnforced = SessionServerHelper.manager
-						.setAccessEnforced(false);
+				boolean isAccessEnforced = SessionServerHelper.manager.setAccessEnforced(false);
 				List<WTPrincipal> rtn = new ArrayList<WTPrincipal>();
 				try {
-					ContainerTeam containerteam = ContainerTeamHelper.service
-							.getContainerTeam(ctm);
-					WTGroup wtgroup = ContainerTeamHelper.service
-							.findContainerTeamGroup(containerteam,
-									"roleGroups", role.toString());
+					ContainerTeam containerteam = ContainerTeamHelper.service.getContainerTeam(ctm);
+					WTGroup wtgroup = ContainerTeamHelper.service.findContainerTeamGroup(containerteam,"roleGroups", role.toString());
 					if (wtgroup != null) {
 						Enumeration members = wtgroup.members();
 						while (members.hasMoreElements()) {
-							WTPrincipal wtp = (WTPrincipal) members
-									.nextElement();
+							WTPrincipal wtp = (WTPrincipal) members.nextElement();
 							if (wtp instanceof WTUser) {
 								WTUser user = (WTUser) wtp;
 								rtn.add(user);
@@ -72,20 +67,16 @@ public class TeamUtil implements RemoteAccess {
 						}
 					}
 				} catch (WTException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				logger.error(CLASSNAME+".getMembersOfContainerRole:"+e);
 				} finally {
-					SessionServerHelper.manager
-							.setAccessEnforced(isAccessEnforced);
+					SessionServerHelper.manager.setAccessEnforced(isAccessEnforced);
 				}
 				return rtn;
 			}
 		} catch (java.rmi.RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(),e);
 		}
 		return null;
 	}
@@ -99,41 +90,31 @@ public class TeamUtil implements RemoteAccess {
 	 * 
 	 */
 	public static ContainerTeam getContainerTeam(WTContainer container) {
-		SessionServerHelper.manager.setAccessEnforced(false);
 		try {
-			if (!RemoteMethodServer.ServerFlag) {
-				return (ContainerTeam) RemoteMethodServer.getDefault().invoke(
-						"getContainerTeam", TeamUtil.class.getName(), null,
-						new Class[] { WTContainer.class },
-						new Object[] { container });
-			} else {
-				boolean enforce = wt.session.SessionServerHelper.manager
-						.setAccessEnforced(false);
-				ContainerTeam containerTeam = null;
+				if (!RemoteMethodServer.ServerFlag) {
+					return (ContainerTeam) RemoteMethodServer.getDefault().invoke("getContainerTeam", TeamUtil.class.getName(), null,
+							new Class[] { WTContainer.class },new Object[] { container });
+				} else {
+						boolean enforce = wt.session.SessionServerHelper.manager.setAccessEnforced(false);
+						ContainerTeam containerTeam = null;
 				try {
-					if (container != null) {
+						if (container != null) {
 						PDMLinkProduct product = (PDMLinkProduct) container;
-						containerTeam = (ContainerTeam) product
-								.getContainerTeamReference().getObject();
+						containerTeam = (ContainerTeam) product.getContainerTeamReference().getObject();
+							}
+						} finally {
+							SessionServerHelper.manager.setAccessEnforced(enforce);
+						}
+						return containerTeam;
 					}
-				} catch (Exception e) {
-					// TODO: handle exception
-				} finally {
-					SessionServerHelper.manager.setAccessEnforced(enforce);
-				}
-				return containerTeam;
+			} catch (java.rmi.RemoteException e) {
+			logger.error(e.getMessage(),e);
+			} catch (InvocationTargetException e) {
+			logger.error(e.getMessage(),e);
+			} catch (WTRuntimeException e) {
+			logger.error(e.getMessage(),e);
 			}
-		} catch (java.rmi.RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (WTRuntimeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
+			return null;
 	}
 
 	/**
@@ -143,87 +124,59 @@ public class TeamUtil implements RemoteAccess {
 	 * @param role
 	 * @throws WTException
 	 */
-	public static void deleteTeamRole(ContainerTeamManaged ctm, String role)
-			throws WTException {
+	public static void deleteTeamRole(ContainerTeamManaged ctm, String role)throws WTException {
 		try {
-			if (!RemoteMethodServer.ServerFlag) {
-				RemoteMethodServer.getDefault()
-						.invoke("deleteTeamRole",
-								TeamUtil.class.getName(),
-								null,
-								new Class[] { ContainerTeamManaged.class,
-										String.class },
-								new Object[] { ctm, role });
+			if (!RemoteMethodServer.ServerFlag) {RemoteMethodServer.getDefault().invoke("deleteTeamRole",TeamUtil.class.getName(),null,
+				new Class[] { ContainerTeamManaged.class,String.class },new Object[] { ctm, role });
 			} else {
-				boolean isAccessEnforced = SessionServerHelper.manager
-						.isAccessEnforced();
+				boolean isAccessEnforced = SessionServerHelper.manager.isAccessEnforced();
 				try {
-					ContainerTeam tm = ContainerTeamHelper.service
-							.getContainerTeam(ctm);
+					ContainerTeam tm = ContainerTeamHelper.service.getContainerTeam(ctm);
 					tm.deleteRole(Role.toRole("role"));
-				} catch (Exception e) {
-					// TODO: handle exception
+				} catch (WTException e) {
+					logger.error(CLASSNAME+".deleteTeamRole:"+e);
 				} finally {
-					SessionServerHelper.manager
-							.setAccessEnforced(isAccessEnforced);
+					SessionServerHelper.manager.setAccessEnforced(isAccessEnforced);
 				}
 			}
 		} catch (WTInvalidParameterException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(),e);
 		} catch (java.rmi.RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(),e);
 		}
-
 	}
 
 	/**
 	 * deleteTeamUser
-	 * 
 	 * @param ctm
 	 * @param role
 	 * @param principal
 	 * @throws WTException
 	 */
-	public static void deleteTeamUser(ContainerTeamManaged ctm, String role,
-			WTPrincipal principal) throws WTException {
+	public static void deleteTeamUser(ContainerTeamManaged ctm, String role,WTPrincipal principal) throws WTException {
 		try {
 			if (!RemoteMethodServer.ServerFlag) {
-				RemoteMethodServer.getDefault().invoke(
-						"deleteTeamUser",
-						TeamUtil.class.getName(),
-						null,
-						new Class[] { ContainerTeamManaged.class, String.class,
-								WTPrincipal.class },
-						new Object[] { ctm, role, principal });
+				RemoteMethodServer.getDefault().invoke("deleteTeamUser",TeamUtil.class.getName(),null,
+						new Class[] { ContainerTeamManaged.class, String.class,WTPrincipal.class },new Object[] { ctm, role, principal });
 			} else {
-				boolean isAccessEnforced = SessionServerHelper.manager
-						.isAccessEnforced();
+				boolean isAccessEnforced = SessionServerHelper.manager.isAccessEnforced();
 				try {
-					ContainerTeam cTeam = ContainerTeamHelper.service
-							.getContainerTeam(ctm);
+					ContainerTeam cTeam = ContainerTeamHelper.service.getContainerTeam(ctm);
 					cTeam.deletePrincipalTarget(Role.toRole(role), principal);
-				} catch (Exception e) {
-					// TODO: handle exception
-					logger.error("e>>>"+e);
+				} catch (WTException e) {
+					logger.error(CLASSNAME+".deleteTeamUser:"+e);
 				} finally {
-					SessionServerHelper.manager
-							.setAccessEnforced(isAccessEnforced);
+					SessionServerHelper.manager.setAccessEnforced(isAccessEnforced);
 				}
 			}
 		} catch (WTInvalidParameterException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(),e);
 		} catch (java.rmi.RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(),e);
 		}
 	}
 
@@ -235,39 +188,27 @@ public class TeamUtil implements RemoteAccess {
 	 * @param principal
 	 * @throws WTException
 	 */
-	public static void updataTeamUser(ContainerTeamManaged ctm, String role,
-			WTPrincipal principal) throws WTException {
+	public static void updataTeamUser(ContainerTeamManaged ctm, String role,WTPrincipal principal) throws WTException {
 		try {
-			if (!RemoteMethodServer.ServerFlag) {
-					RemoteMethodServer.getDefault().invoke(
-							"deleteTeamUser",
-							TeamUtil.class.getName(),
-							null,
-							new Class[] { ContainerTeamManaged.class, String.class,
-									WTPrincipal.class },
-							new Object[] { ctm, role, principal });
+			if (!RemoteMethodServer.ServerFlag) {RemoteMethodServer.getDefault().invoke("deleteTeamUser",TeamUtil.class.getName(),null,
+				new Class[] { ContainerTeamManaged.class, String.class,WTPrincipal.class },new Object[] { ctm, role, principal });
 			} else {
-				boolean isAccessEnforced = SessionServerHelper.manager
-						.isAccessEnforced();
+				boolean isAccessEnforced = SessionServerHelper.manager.isAccessEnforced();
 				try {
-					ContainerTeam cTeam = ContainerTeamHelper.service
-							.getContainerTeam(ctm);
+					ContainerTeam cTeam = ContainerTeamHelper.service.getContainerTeam(ctm);
 					cTeam.addPrincipal(Role.toRole(role), principal);
-				} catch (Exception e) {
-					// TODO: handle exception
+				} catch (WTException e) {
+					logger.error(CLASSNAME+".updataTeamUser:"+e);
 				} finally {
 					SessionServerHelper.manager.setAccessEnforced(isAccessEnforced);
 				}
 			}
 		} catch (WTInvalidParameterException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(),e);
 		} catch (java.rmi.RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(),e);
 		}
 	}
 }
