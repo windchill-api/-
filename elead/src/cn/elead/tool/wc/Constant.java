@@ -10,7 +10,6 @@ import wt.project.Role;
 
 public class Constant
 {
-	
 	public static final long serialVersionUID = 592924258829951579L;
 	public static final String role = "供应商";
 	public static final String SEP_MULTIUSERNAME = ";";
