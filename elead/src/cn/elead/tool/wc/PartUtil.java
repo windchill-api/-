@@ -20,10 +20,6 @@ import wt.folder.FolderHelper;
 import wt.folder.Foldered;
 import wt.inf.container.WTContainer;
 import wt.inf.container.WTContainerRef;
-import wt.lifecycle.LifeCycleHelper;
-import wt.lifecycle.LifeCycleManaged;
-import wt.lifecycle.LifeCycleTemplate;
-import wt.lifecycle.State;
 import wt.log4j.LogR;
 import wt.method.RemoteAccess;
 import wt.method.RemoteMethodServer;
@@ -53,7 +49,7 @@ import wt.vc.wip.WorkInProgressHelper;
 import wt.vc.wip.Workable;
 
 /**
- * 
+ * this PartUtil includes create part,delete part,update part,get part, and some basic things of part
  * @author WangY
  */
 public class PartUtil implements RemoteAccess, Serializable {
@@ -67,35 +63,34 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * @return	if strNumber exist in windChill, return true;	such as: strNumber = "0000000022"
      * 				else return false;	such as: strNumber = "asd" or strNumber = ""  or strNumber = null
 	 */
-    public static boolean isPartExist(String strNumber){
-         try{
- 	        if (!RemoteMethodServer.ServerFlag) {
-                return (boolean) RemoteMethodServer.getDefault().invoke("isPartExist", 
-                		PartUtil.class.getName(), null, new Class[] { String.class},
-                		new Object[] { strNumber });
- 	        } else {
- 	        	boolean flag = false;
+	public static boolean isPartExist(String strNumber) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (boolean) RemoteMethodServer.getDefault().invoke("isPartExist", PartUtil.class.getName(), null,
+						new Class[] { String.class }, new Object[] { strNumber });
+			} else {
+				boolean flag = false;
  	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 		    	try {
-			    	if(!StringUtils.isEmpty(strNumber)){
+		    		if (!StringUtils.isEmpty(strNumber)) {
 			    		WTPartMaster wtpartmaster = getPartMasterByNumber(strNumber);
 						if (wtpartmaster != null) {
-				            flag = true;
-				        } 
+							flag = true;
+				        }
 			        }
 		    	} finally {
 		             SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
 		    	return flag;
- 	        }
-         } catch (RemoteException e) {
-             logger.error(e.getMessage(),e);
-         } catch (InvocationTargetException e) {
-         	logger.error(e.getMessage(),e);
-         }
-         return false;
+			}
+		} catch (RemoteException e) {
+			logger.error(e.getMessage(),e);
+		} catch (InvocationTargetException e) {
+			logger.error(e.getMessage(),e);
+		}
+        return false;
     }
-    
+
     /**
      * get part by oid
      * @param oid
@@ -104,29 +99,28 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * 							or oid = "asdf"; 
 	 * 				else if oid is null or "",return null
      */
-    public static WTPart getPartByOid(String oid){
-        try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	                return (WTPart) RemoteMethodServer.getDefault().invoke("getPartByOid", 
-	                		PartUtil.class.getName(), null, new Class[] { String.class},
-	                		new Object[] { oid });
+	public static WTPart getPartByOid(String oid) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (WTPart) RemoteMethodServer.getDefault().invoke("getPartByOid", PartUtil.class.getName(), null,
+						new Class[] { String.class }, new Object[] { oid });
 	        } else {
-	        	WTPart wtpart = null;
+	        	WTPart part = null;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 				try {
-					if(!StringUtils.isEmpty(oid)){
+					if (!StringUtils.isEmpty(oid)) {
 						ReferenceFactory rf = new ReferenceFactory();
-						wtpart = (WTPart) rf.getReference(oid).getObject();
+						part = (WTPart) rf.getReference(oid).getObject();
 					}
 				} catch (WTException e) {
-					logger.error(">>>>>"+e);
+					logger.error(CLASSNAME+".isPartExist:"+e);
 				} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
-				return wtpart;
+				return part;
 	        }
-        } catch (RemoteException e) {
-            logger.error(e.getMessage(),e);
+		} catch (RemoteException e) {
+			logger.error(e.getMessage(),e);
         } catch (InvocationTargetException e) {
         	logger.error(e.getMessage(),e);
         }
@@ -138,29 +132,28 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * if partNumber exist in windChill,return WTPart;	such as:partNumber = "0000000041"
 	 * 		else return null	such as 
 	 */
-	public static WTPart getPartByNumber(String partNumber){
-        try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	                return (WTPart) RemoteMethodServer.getDefault().invoke("getPartByNumber", 
-	                		PartUtil.class.getName(), null, new Class[] { String.class},
-	                		new Object[] { partNumber });
+	public static WTPart getPartByNumber(String partNumber) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (WTPart) RemoteMethodServer.getDefault().invoke("getPartByNumber", PartUtil.class.getName(),
+						null, new Class[] { String.class }, new Object[] { partNumber });
 	        } else {
 	        	WTPart part = null;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-	        	try{
+	        	try {
 					if (!StringUtils.isEmpty(partNumber) && isPartExist(partNumber)) {
-						QuerySpec qs = new QuerySpec(WTPartMaster.class);
-						WhereExpression  we = new SearchCondition(WTPartMaster.class,WTPartMaster.NUMBER, SearchCondition.EQUAL, partNumber);
-						qs.appendWhere(we,new int[] { 0 });
+						QuerySpec qs = new QuerySpec(WTPart.class);
+						WhereExpression  we = new SearchCondition(WTPart.class,WTPart.NUMBER, SearchCondition.EQUAL, partNumber);
+						qs.appendWhere(we, new int[] { 0 });
 						QueryResult qr = PersistenceHelper.manager.find((StatementSpec) qs);
 						LatestConfigSpec cfg = new LatestConfigSpec();  //构建过滤器
 						QueryResult qr1 = cfg.process(qr); //按小版本排序
-						if(qr1.hasMoreElements()){
+						if (qr1.hasMoreElements()) {
 							part =(WTPart) qr1.nextElement(); //获取最新小版本的WTPart对象
 						}
 					}
-	        	} catch(WTException e){
-	        		logger.error(">>>>"+e);
+	        	} catch(WTException e) {
+	        		logger.error(CLASSNAME+".getPartByNumber:"+e);
 	        	} finally {
 	                SessionServerHelper.manager.setAccessEnforced(enforce);
 	            }
@@ -187,58 +180,53 @@ public class PartUtil implements RemoteAccess, Serializable {
      * @throws WTException
      */
     @SuppressWarnings("unchecked")
-	public static List<WTPart> getPartByProperties(String number,String name, String state,     
-            String type){
-        try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	                return (List<WTPart>) RemoteMethodServer.getDefault().invoke("getPartByProperties", 
-	                		PartUtil.class.getName(), null, new Class[] { String.class,String.class,String.class,String.class},
-	                		new Object[] { number,name,state,type});
+	public static List<WTPart> getPartByProperties(String number, String name, String state, String type) {
+    	try {
+    		if (!RemoteMethodServer.ServerFlag) {
+    			return (List<WTPart>) RemoteMethodServer.getDefault().invoke("getPartByProperties", PartUtil.class.getName(), null, 
+    					new Class[] { String.class, String.class, String.class, String.class }, new Object[] { number, name, state, type });
 	        } else {
 	        	List<WTPart> partList = new ArrayList<WTPart>();
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 	        	int count = 0;
 	        	WTPart part = null;
-	        	try{
+	        	try {
 		        	QuerySpec qs = new QuerySpec(WTPart.class);
-		        	if(!StringUtils.isEmpty(number)){
-		        		SearchCondition sc = new SearchCondition(WTPart.class, WTPart.NUMBER,
-				                SearchCondition.EQUAL, number, false);
+		        	if (!StringUtils.isEmpty(number)) {
+		        		SearchCondition sc = new SearchCondition(WTPart.class, WTPart.NUMBER,SearchCondition.EQUAL, number, false);
 				        qs.appendWhere(sc, new int[] { 0 });
 				        count++;
 		        	}
-		        	if(!StringUtils.isEmpty(name)){
-		        		if(count != 0){
+		        	if (!StringUtils.isEmpty(name)) {
+		        		if(count != 0) {
 		        			qs.appendAnd();
 		        		}
-		        		SearchCondition sc = new SearchCondition(WTPart.class, WTPart.NAME,
-				                SearchCondition.EQUAL, name, false);
+		        		SearchCondition sc = new SearchCondition(WTPart.class, WTPart.NAME,SearchCondition.EQUAL, name, false);
 				        qs.appendWhere(sc, new int[] { 0 });
 				        count++;
 		        	}
-		        	QueryResult qr = PersistenceServerHelper.manager
-			                .query((StatementSpec) qs);
+		        	QueryResult qr = PersistenceServerHelper.manager.query((StatementSpec) qs);
 			        qr = new LatestConfigSpec().process(qr);
 		        	while (qr.hasMoreElements()) {
-			            part = (WTPart) qr.nextElement();
+		        		part = (WTPart) qr.nextElement();
 			            String ibaType = "";
 			            String partState = "";
-			            if(!StringUtils.isEmpty(type)){
+			            if (!StringUtils.isEmpty(type)) {
 			            	ibaType = TypedUtility.getTypeIdentifier(part).getTypename();
 			            }
-			            if(!StringUtils.isEmpty(state)){
+			            if (!StringUtils.isEmpty(state)) {
 			            	partState = part.getState().toString();
 			            }
 			            if (partState.indexOf(state) != -1 && ibaType.indexOf(type) != -1) {
 			                partList.add(part);
-			            }else if(partState.indexOf(state) != -1){
+			            } else if (partState.indexOf(state) != -1) {
 			            	partList.add(part);
-			            }else if(ibaType.indexOf(type) != -1){
+			            } else if (ibaType.indexOf(type) != -1) {
 			            	partList.add(part);
 			            }
 			        }
-	        	} catch(WTException e){
-	        		logger.error(">>>>"+e);
+	        	} catch(WTException e) {
+	        		logger.error(CLASSNAME+".getPartByProperties:"+e);
 	        	} finally {
 	                SessionServerHelper.manager.setAccessEnforced(enforce);
 	            }
@@ -259,17 +247,17 @@ public class PartUtil implements RemoteAccess, Serializable {
      * 				else return null	such as:partNo = "asd" or partNo = "" or partNo = null
      * @throws WTException
      */
-    public static WTPartMaster getPartMasterByNumber(String partNo){
-        try{
+    public static WTPartMaster getPartMasterByNumber(String partNo) {
+        try {
 	        if (!RemoteMethodServer.ServerFlag) {
-	                return (WTPartMaster) RemoteMethodServer.getDefault().invoke("getPartMasterByNumber", 
-	                		PartUtil.class.getName(), null, new Class[] { String.class},
+	        	return (WTPartMaster) RemoteMethodServer.getDefault().invoke("getPartMasterByNumber", 
+	        				PartUtil.class.getName(), null, new Class[] { String.class },
 	                		new Object[] { partNo });
 	        } else {
 	        	WTPartMaster partMaster = null;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-	        	try{
-			        QuerySpec querySpec = new QuerySpec(WTPartMaster.class);
+	        	try {
+	        		QuerySpec querySpec = new QuerySpec(WTPartMaster.class);
 			        WhereExpression searchCondition = new SearchCondition(WTPartMaster.class, WTPartMaster.NUMBER, 
 			        		SearchCondition.EQUAL, partNo, false);
 			        querySpec.appendWhere(searchCondition,new int[] { 0 });
@@ -277,8 +265,8 @@ public class PartUtil implements RemoteAccess, Serializable {
 			        while (queryResult.hasMoreElements()) {
 			            partMaster = (WTPartMaster) queryResult.nextElement();
 			        }
-	        	} catch(WTException e){
-	        		logger.error(">>>>"+e);
+	        	} catch(WTException e) {
+	        		logger.error(CLASSNAME+".getPartMasterByNumber:"+e);
 	        	} finally {
 	                SessionServerHelper.manager.setAccessEnforced(enforce);
 	            }
@@ -300,25 +288,24 @@ public class PartUtil implements RemoteAccess, Serializable {
      * 				else if partMaster is not exist or partMaster is null,return null
      * @throws WTException
      */
-    public static WTPart getLatestPartByMaster(WTPartMaster partMaster){
-		try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	            return (WTPart)RemoteMethodServer.getDefault().invoke("getLatestPartByMaster", 
-	                		PartUtil.class.getName(), null, new Class[] {WTPartMaster.class},
-	                		new Object[] { partMaster});
+    public static WTPart getLatestPartByMaster(WTPartMaster partMaster) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (WTPart)RemoteMethodServer.getDefault().invoke("getLatestPartByMaster", PartUtil.class.getName(),
+						null, new Class[] { WTPartMaster.class }, new Object[] { partMaster });
 	        } else {
 	        	WTPart latestPart = null;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-	        	try{
-			        if(partMaster!=null && isPartExist(partMaster.getNumber())){
-				        QueryResult qr = VersionControlHelper.service
-				                .allIterationsOf(partMaster);
-				        if (qr.hasMoreElements()) {
-				            latestPart = (WTPart) qr.nextElement();
-				        }
+	        	try {
+	        		if (partMaster == null) {
+	        			return null;
+	        		}
+        			QueryResult qr = VersionControlHelper.service.allIterationsOf(partMaster);
+			        if (qr.hasMoreElements()) {
+			        	latestPart = (WTPart) qr.nextElement();
 			        }
-	        	} catch(WTException e){
-	        		logger.error(">>>>"+e);
+	        	} catch(WTException e) {
+	        		logger.error(CLASSNAME+".getLatestPartByMaster:"+e);
 	        	} finally {
 	                SessionServerHelper.manager.setAccessEnforced(enforce);
 	            }
@@ -339,21 +326,21 @@ public class PartUtil implements RemoteAccess, Serializable {
      * 			else if part is not exist in WinChill ,return null
      * 			else if part is null,return null
      */
-	public static String getTypeByPart(WTPart part){
-        try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	                return (String) RemoteMethodServer.getDefault().invoke("getTypeByPart", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
+    public static String getTypeByPart(WTPart part) {
+    	try {
+    		if (!RemoteMethodServer.ServerFlag) {
+    			return (String) RemoteMethodServer.getDefault().invoke("getTypeByPart", PartUtil.class.getName(), null, 
+    					new Class[] { WTPart.class }, new Object[] { part });
 	        } else {
 	        	String partType = null;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 				try {
-					if(part!=null && isPartExist(part.getNumber())){
-						partType = TypedUtilityServiceHelper.service.getExternalTypeIdentifier(part).toString();
+					if (part == null) {
+						return null;
 					}
+					partType = TypedUtilityServiceHelper.service.getExternalTypeIdentifier(part).toString();
 				} catch (WTException e) {
-					logger.error(">>>>>"+e);
+					logger.error(CLASSNAME+".getTypeByPart:"+e);
 				} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
@@ -374,19 +361,19 @@ public class PartUtil implements RemoteAccess, Serializable {
      * 			else if part is not exist in WinChill ,return null
      * 			else if part is null,return null
 	 */
-	public static String getNumberByPart(WTPart part){
-        try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	                return (String) RemoteMethodServer.getDefault().invoke("getNumberByPart", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
+	public static String getNumberByPart(WTPart part) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (String) RemoteMethodServer.getDefault().invoke("getNumberByPart", PartUtil.class.getName(), null, 
+						new Class[] { WTPart.class}, new Object[] { part });
 	        } else {
 	        	String partNumber = null;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-				try{
-					if(part!=null && isPartExist(part.getNumber())){
-						partNumber = part.getNumber();
+				try {
+					if (part == null) {
+						return null;
 					}
+					partNumber = part.getNumber();
 				} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
@@ -407,19 +394,19 @@ public class PartUtil implements RemoteAccess, Serializable {
      * 			else if part is not exist in WinChill ,return null
      * 			else if part is null,return null
 	 */
-	public static String getNameByPart(WTPart part){
-        try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	                return (String) RemoteMethodServer.getDefault().invoke("getNameByPart", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
+	public static String getNameByPart(WTPart part) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (String) RemoteMethodServer.getDefault().invoke("getNameByPart", PartUtil.class.getName(), null,
+						new Class[] { WTPart.class }, new Object[] { part });
 	        } else {
 	        	String partName = null;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-				try{
-					if(part!=null && isPartExist(part.getNumber())){
-						partName = part.getName();
+				try {
+					if (part == null){
+						return null;
 					}
+					partName = part.getName();
 				} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
@@ -434,96 +421,29 @@ public class PartUtil implements RemoteAccess, Serializable {
 	}
 	
 	/**
-	 * get part lifeCycle by part
-	 * @param part
-	 * @return		if part is exist in windChill,return state
-	 * 				else if part is not exist in windChill or part is null,return null
-	 */
-	public static State getLifeCycleState(WTPart part){
-		try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	               return (State)RemoteMethodServer.getDefault().invoke("getLifeCycleState", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
-	        } else {
-	        	State state = null;
-	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-				try {
-					if(part!=null && isPartExist(part.getNumber())){
-						state = part.getLifeCycleState();
-					}
-				} finally {
-		            SessionServerHelper.manager.setAccessEnforced(enforce);
-		        }
-				return state;
-	        }
-		} catch (RemoteException e) {
-            logger.error(e.getMessage(),e);
-        } catch (InvocationTargetException e) {
-        	logger.error(e.getMessage(),e);
-        }
-		return null;
-	}
-	
-	/**
-	 * get part lifeCycleTemplate by part
-	 * @param part
-	 * @return		if part is exist in windChill,return lifeCycleTemplate
-	 * 				else if part is not exist in windChill or part is null,return null
-	 */
-	@SuppressWarnings("deprecation")
-	public static LifeCycleTemplate getLifeCycleTemplate(WTPart part){
-		try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	               return (LifeCycleTemplate)RemoteMethodServer.getDefault().invoke("getLifeCycleTemplate", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
-	        } else {
-	        	LifeCycleTemplate lt = null;
-	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-				try {
-					if(part!=null && isPartExist(part.getNumber())){
-						 lt = LifeCycleHelper.service.getLifeCycleTemplate((LifeCycleManaged) part);
-					}
-				} catch (WTException e) {
-					e.printStackTrace();
-				} finally {
-		            SessionServerHelper.manager.setAccessEnforced(enforce);
-		        }
-				return lt;
-	        }
-		} catch (RemoteException e) {
-            logger.error(e.getMessage(),e);
-        } catch (InvocationTargetException e) {
-        	logger.error(e.getMessage(),e);
-        }
-		return null;
-	}
-	
-	/**
 	 * get bigVersion part by part
 	 * @param part
 	 * @return	if part exist in windChill,return part bigVersion
      * 			else if part is not exist in WinChill ,return null
      * 			else if part is null,return null
 	 */
-	public static String getBigVersionByPart(WTPart part){
-        try{
+	public static String getBigVersionByPart(WTPart part) {
+        try {
 	        if (!RemoteMethodServer.ServerFlag) {
-	                return (String) RemoteMethodServer.getDefault().invoke("getBigVersionByPart", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
+	        	return (String) RemoteMethodServer.getDefault().invoke("getBigVersionByPart", PartUtil.class.getName(),
+	        			null, new Class[] { WTPart.class }, new Object[] { part });
 	        } else {
-	        	String wt = null;
+	        	String bigVersion = null;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-				try{
-					if(part!=null && isPartExist(part.getNumber())){
-						wt = part.getVersionIdentifier().getValue();
+				try {
+					if (part == null) {
+						return null;
 					}
+					bigVersion = part.getVersionIdentifier().getValue();
 				} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
-				return wt;
+				return bigVersion;
 	        }
         } catch (RemoteException e) {
             logger.error(e.getMessage(),e);
@@ -540,23 +460,23 @@ public class PartUtil implements RemoteAccess, Serializable {
      * 			else if part is not exist in WinChill ,return null
      * 			else if part is null,return null
 	 */
-	public static String getSmallVersionByPart(WTPart part){
-        try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	                return (String) RemoteMethodServer.getDefault().invoke("getSmallVersionByPart", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
+	public static String getSmallVersionByPart(WTPart part) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (String) RemoteMethodServer.getDefault().invoke("getSmallVersionByPart", PartUtil.class.getName(), 
+						null, new Class[] { WTPart.class }, new Object[] { part });
 	        } else {
-	        	String wt = null;
+	        	String smallVersion = null;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-				try{
-					if(part!=null && isPartExist(part.getNumber())){
-						wt = part.getIterationIdentifier().getValue();
+				try {
+					if (part == null) {
+						return null;
 					}
+					smallVersion = part.getIterationIdentifier().getValue();
 				} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
-				return wt;
+				return smallVersion;
 	        }
         } catch (RemoteException e) {
             logger.error(e.getMessage(),e);
@@ -575,17 +495,16 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * @throws WTException
 	 */
 	@SuppressWarnings("unchecked")
-	public static List<WTPartMaster> getSubPartByPartNumber(String number){
-        try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	                return (List<WTPartMaster>) RemoteMethodServer.getDefault().invoke("getSubPartByPartNumber", 
-	                		PartUtil.class.getName(), null, new Class[] { String.class},
-	                		new Object[] { number});
+	public static List<WTPartMaster> getSubPartByPartNumber(String number) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (List<WTPartMaster>) RemoteMethodServer.getDefault().invoke("getSubPartByPartNumber", 
+						PartUtil.class.getName(), null, new Class[] { String.class }, new Object[] { number });
 	        } else {
 	        	List<WTPartMaster> wtpmList = new ArrayList<WTPartMaster>(); 
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-	        	try{
-					if(!StringUtils.isEmpty(number) && isPartExist(number)){
+	        	try {
+					if (!StringUtils.isEmpty(number) && isPartExist(number)) {
 						QuerySpec qs = new QuerySpec();
 						int wtp = qs.appendClassList(WTPart.class,false);
 						int wtm = qs.appendClassList(WTPartMaster.class,false);
@@ -607,7 +526,7 @@ public class PartUtil implements RemoteAccess, Serializable {
 						qs.appendAnd();
 						qs.appendWhere(w3,new int[] { 0 });
 						QueryResult qr = PersistenceHelper.manager.find((StatementSpec)qs);
-						while(qr.hasMoreElements()){
+						while (qr.hasMoreElements()) {
 							Object[] obj = (Object[]) qr.nextElement();
 							WTPartUsageLink wu = (WTPartUsageLink) obj[0];
 							WTPartMaster pa = (WTPartMaster)wu.getUses();
@@ -623,9 +542,9 @@ public class PartUtil implements RemoteAccess, Serializable {
 							}
 						}
 					}
-	        	} catch(WTException e){
-	        		logger.error(">>>>>"+e);
-	        	} finally{
+	        	} catch(WTException e) {
+	        		logger.error(CLASSNAME+".getSubPartByPartNumber:"+e);
+	        	} finally {
 	        		SessionServerHelper.manager.setAccessEnforced(enforce);
 	        	}
 	        	return wtpmList;
@@ -645,32 +564,32 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * 			else if part is null or part is not exist in windChill,return []
 	 */
 	@SuppressWarnings("unchecked")
-	public static List<WTDocument> getDisDocByPart(WTPart part){
-        try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	                return (List<WTDocument>) RemoteMethodServer.getDefault().invoke("getDisDocByPart", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
+	public static List<WTDocument> getDisDocByPart(WTPart part) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (List<WTDocument>) RemoteMethodServer.getDefault().invoke("getDisDocByPart", 
+						PartUtil.class.getName(), null, new Class[] { WTPart.class }, new Object[] { part });
 	        } else {
-	        	List<WTDocument> listDoc = new ArrayList<WTDocument>();
+	        	List<WTDocument> docList = new ArrayList<WTDocument>();
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 				try {
-					if(part!=null && isPartExist(part.getNumber())){
-						QueryResult qr = WTPartHelper.service.getDescribedByDocuments(part);
-						while(qr.hasMoreElements()){
-							Object object = qr.nextElement();
-							if(object instanceof WTDocument){
-							     WTDocument doc = (WTDocument)object;
-							     listDoc.add(doc);
-							}
+					if (part == null) {
+						return null;
+					}
+					QueryResult qr = WTPartHelper.service.getDescribedByDocuments(part);
+					while (qr.hasMoreElements()) {
+						Object object = qr.nextElement();
+						if (object instanceof WTDocument) {
+							WTDocument doc = (WTDocument)object;
+							docList.add(doc);
 						}
 					}
-				} catch(WTException e){
-	        		logger.error(">>>>>"+e);
-	        	} finally{
+				} catch(WTException e) {
+					logger.error(CLASSNAME+".getDisDocByPart:"+e);
+	        	} finally {
 	        		SessionServerHelper.manager.setAccessEnforced(enforce);
 	        	}
-				return listDoc;
+				return docList;
 	        }
         } catch (RemoteException e) {
             logger.error(e.getMessage(),e);
@@ -684,34 +603,33 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * get referenceDoc by part
 	 * @author WangY
 	 */
-	@SuppressWarnings("unchecked")
-	public static List<WTDocumentMaster> getRefDocByPart(WTPart part){
-        try{
+	@SuppressWarnings({ "deprecation", "unchecked" })
+	public static List<WTDocumentMaster> getRefDocByPart(WTPart part) {
+        try {
 	        if (!RemoteMethodServer.ServerFlag) {
 	                return (List<WTDocumentMaster>) RemoteMethodServer.getDefault().invoke("getRefDocByPart", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
+	                		PartUtil.class.getName(), null, new Class[] { WTPart.class }, new Object[] { part });
 	        } else {
-	        	List<WTDocumentMaster> listDocMaster = new ArrayList<WTDocumentMaster>();
+	        	List<WTDocumentMaster> docMasterList = new ArrayList<WTDocumentMaster>();
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 				try {
-					if(part!=null && isPartExist(part.getNumber())){
-						@SuppressWarnings("deprecation")
-						QueryResult qr = WTPartHelper.service.getReferencesWTDocumentMasters(part);
-						while(qr.hasMoreElements()){
-							Object object = qr.nextElement();
-						if(object instanceof WTDocumentMaster){
-							    WTDocumentMaster doct = (WTDocumentMaster)object;
-							    listDocMaster.add(doct);
-							}
+					if (part == null) {
+						return null;
+					}
+					QueryResult qr = WTPartHelper.service.getReferencesWTDocumentMasters(part);
+					while (qr.hasMoreElements()) {
+						Object object = qr.nextElement();
+					if (object instanceof WTDocumentMaster) {
+						WTDocumentMaster doct = (WTDocumentMaster)object;
+						docMasterList.add(doct);
 						}
 					}
-				} catch(WTException e){
-	        		logger.error(">>>>>"+e);
-	        	} finally{
+				} catch(WTException e) {
+					logger.error(CLASSNAME+".getRefDocByPart:"+e);
+	        	} finally {
 	        		SessionServerHelper.manager.setAccessEnforced(enforce);
 	        	}
-				return listDocMaster;
+				return docMasterList;
 	        }
         } catch (RemoteException e) {
             logger.error(e.getMessage(),e);
@@ -733,31 +651,30 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * 				else return null
 	 * 					such as:createPart("asd","","0000000022") or createPart("","1234","asd")
 	 */
-	public static WTPart createPart(String newPartNumber,String newPartName,String partNumber){
-        try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	                return (WTPart) RemoteMethodServer.getDefault().invoke("newPart", 
-	                		PartUtil.class.getName(), null, new Class[] { String.class,String.class,String.class},
-	                		new Object[] { newPartName,newPartNumber,partNumber});
+	public static WTPart createPart(String newPartNumber, String newPartName, String partNumber) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (WTPart) RemoteMethodServer.getDefault().invoke("createPart", PartUtil.class.getName(), null, 
+						new Class[] { String.class ,String.class, String.class }, new Object[] { newPartName, 
+						newPartNumber, partNumber });
 	        } else {
 	        	WTPart part = null;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-				try{
-					if(!StringUtils.isEmpty(newPartName)&& !StringUtils.isEmpty(partNumber)
-							&& isPartExist(partNumber)){
+				try {
+					if (!StringUtils.isEmpty(newPartName) && !StringUtils.isEmpty(partNumber) && isPartExist(partNumber)) {
 						part = WTPart.newWTPart();
 						part.setName(newPartName);//设置名字
-						if(!StringUtils.isEmpty(newPartNumber) && !isPartExist(newPartNumber)){
+						if (!StringUtils.isEmpty(newPartNumber) && !isPartExist(newPartNumber)) {
 							part.setNumber(newPartNumber);//设置编号
 						}
 						part.setContainer(getPartByNumber(partNumber).getContainer());//设置容器
 						PersistenceHelper.manager.save(part);
 					}
-				} catch(WTException e){
-	        		logger.error(">>>>>"+e);
-	        	} catch(WTPropertyVetoException e){
-	        		logger.error(">>>>>"+e);
-	        	} finally{
+				} catch(WTException e) {
+					logger.error(CLASSNAME+".createPart:"+e);
+	        	} catch(WTPropertyVetoException e) {
+	        		logger.error(CLASSNAME+".createPart:"+e);
+	        	} finally {
 	        		SessionServerHelper.manager.setAccessEnforced(enforce);
 	        	}
 				return part;
@@ -776,20 +693,20 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * 		if part is exist in windChill,delete it
 	 * 		else if part is not exist in windChill or part is null,there is nothing to do
 	 */
-	public static void deletePart(WTPart part){
-        try{
+	public static void deletePart(WTPart part) {
+        try {
 	        if (!RemoteMethodServer.ServerFlag) {
-	                RemoteMethodServer.getDefault().invoke("deletePart", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
+	        	RemoteMethodServer.getDefault().invoke("deletePart", PartUtil.class.getName(), null, new Class[]
+	        			{ WTPart.class }, new Object[] { part });
 	        } else {
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 				try {
-					if(part!=null && isPartExist(part.getNumber())){
-						PersistenceHelper.manager.delete(part);
+					if (part == null) {
+						return;
 					}
+					PersistenceHelper.manager.delete(part);
 				} catch (WTException e) {
-					logger.error(">>>>>"+e);
+					logger.error(CLASSNAME+".deletePart:"+e);
 				} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
@@ -809,31 +726,31 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * 		if part is exist in windChill,newNumber is not exist in windChill and newName is not empty,update the part
 	 * 		else there is nothing to do
 	 */
-	public static void updatePart(WTPart part,String newNumber,String newName){
-		try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	                RemoteMethodServer.getDefault().invoke("updatePartNumber", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class,String.class,String.class},
-	                		new Object[] { part,newNumber,newName});
+	public static void updatePart(WTPart part, String newNumber, String newName) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				RemoteMethodServer.getDefault().invoke("updatePart", PartUtil.class.getName(), null, new Class[]
+						{ WTPart.class, String.class, String.class }, new Object[] { part,newNumber,newName });
 	        } else {
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 				try {
-					if(part!=null && isPartExist(part.getNumber()) && !StringUtils.isEmpty(newNumber) && !isPartExist(newNumber)){
-						WTPartMaster partMaster = (WTPartMaster) part.getMaster();
-						WTOrganization wtorganization = part.getOrganization();
-						if(!StringUtils.isEmpty("newNumber") && !isPartExist(newNumber)){
-							partMaster = WTPartHelper.service.changeWTPartMasterIdentity((WTPartMaster) partMaster,	
-									part.getName(), newNumber, wtorganization);
-						}
-						if(!StringUtils.isEmpty(newName)){
-							partMaster = WTPartHelper.service.changeWTPartMasterIdentity((WTPartMaster) partMaster,	
-									newName, part.getNumber(), wtorganization);
-						}
+					if (part == null) {
+						return;
 					}
-				} catch(WTPropertyVetoException e){
-					logger.error(">>>>>"+e);
+					WTPartMaster partMaster = (WTPartMaster) part.getMaster();
+					WTOrganization wtorganization = part.getOrganization();
+					if (!StringUtils.isEmpty(newNumber) && !isPartExist(newNumber)) {
+						partMaster = WTPartHelper.service.changeWTPartMasterIdentity((WTPartMaster) partMaster,	part.getName(),
+								newNumber, wtorganization);
+					}
+					if (!StringUtils.isEmpty(newName)) {
+						partMaster = WTPartHelper.service.changeWTPartMasterIdentity((WTPartMaster) partMaster,	newName, 
+								part.getNumber(), wtorganization);
+					}
+				} catch(WTPropertyVetoException e) {
+					logger.error(CLASSNAME+".updatePart:"+e);
 				} catch (WTException e) {
-					logger.error(">>>>>"+e);
+					logger.error(CLASSNAME+".updatePart:"+e);
 				} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
@@ -851,25 +768,25 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * @return	if part is exist in windChill and is checkOut,return true
 	 * 				else return false
 	 */
-	public static boolean isCheckOut(WTPart part){
-		try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	                 return (boolean)RemoteMethodServer.getDefault().invoke("isCheckOutState", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
+	public static boolean isCheckOut(WTPart part) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (boolean)RemoteMethodServer.getDefault().invoke("isCheckOut", PartUtil.class.getName(), 
+						null, new Class[] { WTPart.class }, new Object[] { part });
 	        } else {
-	        	boolean bo = false;
+	        	boolean flag = false;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 				try {
-					if(part!=null && isPartExist(part.getNumber())){
-						bo = WorkInProgressHelper.isCheckedOut(part);
+					if (part == null) {
+						return false;
 					}
+					flag = WorkInProgressHelper.isCheckedOut(part);
 				} catch (WTException e) {
-					logger.error(">>>>>"+e);
+					logger.error(CLASSNAME+".isCheckOut:"+e);
 				} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
-				return bo;
+				return flag;
 	        }
 		} catch (RemoteException e) {
             logger.error(e.getMessage(),e);
@@ -885,23 +802,23 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * @return		if part is exist in windChill and is workingCopy,return true
 	 * 				else return false
 	 */
-	public static boolean isWorkingCopy(WTPart part){
-		try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	               return (boolean)RemoteMethodServer.getDefault().invoke("isWorkingCopy", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
+	public static boolean isWorkingCopy(WTPart part) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (boolean)RemoteMethodServer.getDefault().invoke("isWorkingCopy", PartUtil.class.getName(), null,
+						new Class[] { WTPart.class }, new Object[] { part });
 	        } else {
-	        	boolean bo = false;
+	        	boolean flag = false;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 				try {
-					if(part!=null && isPartExist(part.getNumber())){
-						bo = WorkInProgressHelper.isWorkingCopy(part);
+					if (part == null) {
+						return false;
 					}
+					flag = WorkInProgressHelper.isWorkingCopy(part);
 				} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
-				return bo;
+				return flag;
 	        }
 		} catch (RemoteException e) {
             logger.error(e.getMessage(),e);
@@ -917,25 +834,25 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * @return		if part is exist in windChill and is workingCopy,return true
 	 * 				else return false
 	 */
-	public static boolean isModifiable(WTPart part){
-		try{
+	public static boolean isModifiable(WTPart part) {
+		try {
 	        if (!RemoteMethodServer.ServerFlag) {
-	               return (boolean)RemoteMethodServer.getDefault().invoke("isModifiable", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
+	               return (boolean)RemoteMethodServer.getDefault().invoke("isModifiable", PartUtil.class.getName(), null, 
+	            		   new Class[] { WTPart.class }, new Object[] { part });
 	        } else {
-	        	boolean bo = false;
+	        	boolean flag = false;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 				try {
-					if(part!=null && isPartExist(part.getNumber())){
-						bo = WorkInProgressHelper.isModifiable(part);
+					if (part == null) {
+						return false;
 					}
+					flag = WorkInProgressHelper.isModifiable(part);
 				} catch (WTException e) {
-					logger.error(">>>>>"+e);
+					logger.error(CLASSNAME+".isModifiable:"+e);
 				} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
-				return bo;
+				return flag;
 	        }
 		} catch (RemoteException e) {
             logger.error(e.getMessage(),e);
@@ -951,38 +868,38 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * @return		if part is exist in windChill,return workable
 	 * 				else if part is not exist in windChill or part is null,return null
 	 */
-	public static Workable doCheckOut(Workable part){
-		try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	               return (Workable)RemoteMethodServer.getDefault().invoke("doCheckOut", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
+	public static Workable doCheckOut(Workable part) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (Workable)RemoteMethodServer.getDefault().invoke("doCheckOut", PartUtil.class.getName(), null,
+						new Class[] { Workable.class },new Object[] { part });
 	        } else {
 	        	Workable workable = null;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-				try{
-					if(part!=null){
-						if(part instanceof Iterated){
-							Iterated it = (Iterated) part;
-							part=(Workable) VersionControlHelper.service.getLatestIteration(it, false);
-							Boolean checkOutFlag=WorkInProgressHelper.isCheckedOut(part);
-							if(checkOutFlag){ 
-								if(!WorkInProgressHelper.isWorkingCopy(part)){
-							         workable=WorkInProgressHelper.service.workingCopyOf(part);
-								}else{
-									workable = part;
-								}
-							}else{
-								Folder myFolder= WorkInProgressHelper.service.getCheckoutFolder();
-								CheckoutLink link = WorkInProgressHelper.service.checkout(part, myFolder, "AutoCheckOut");
-								workable = link.getWorkingCopy();
-							}
-						}	
+				try {
+					if (part == null) {
+						return null;
 					}
-				} catch(WTPropertyVetoException e){
-					logger.error(">>>>>"+e);
-				} catch(WTException e){
-					e.printStackTrace();
+					if (part instanceof Iterated) {
+						Iterated it = (Iterated) part;
+						part=(Workable) VersionControlHelper.service.getLatestIteration(it, false);
+						Boolean checkOutFlag=WorkInProgressHelper.isCheckedOut(part);
+						if (checkOutFlag) { 
+							if (!WorkInProgressHelper.isWorkingCopy(part)) {
+								workable=WorkInProgressHelper.service.workingCopyOf(part);
+							} else {
+								workable = part;
+							}
+						} else {
+							Folder myFolder= WorkInProgressHelper.service.getCheckoutFolder();
+							CheckoutLink link = WorkInProgressHelper.service.checkout(part, myFolder, "AutoCheckOut");
+							workable = link.getWorkingCopy();
+						}
+					}	
+				} catch(WTPropertyVetoException e) {
+					logger.error(CLASSNAME+".doCheckOut:"+e);
+				} catch(WTException e) {
+					logger.error(CLASSNAME+".doCheckOut:"+e);
 				} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
@@ -1002,29 +919,29 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * 		if part is exist in windChill,checkIn part
 	 * 		else if part is not exist in windChill or part is null,there is nothing to do
 	 */
-	public static void doCheckIn(Workable part){
-		try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	               RemoteMethodServer.getDefault().invoke("doCheckIn", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class},
-	                		new Object[] { part});
+	public static void doCheckIn(Workable part) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				RemoteMethodServer.getDefault().invoke("doCheckIn", PartUtil.class.getName(), null, new Class[] 
+						{ Workable.class }, new Object[] { part });
 	        } else {
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-	        	try{
-					if(part!=null){
-						Workable workable = null;
-						if(!WorkInProgressHelper.isWorkingCopy(part)){
-							workable = doCheckOut(part);//从检出方法中得到已检出工作副本
-						}else{
-							workable = part;
-						}
-							workable = WorkInProgressHelper.service.checkin(workable, "AutoCheckIn");
+	        	try {
+	        		if (part == null) {
+	        			return;
+	        		}
+					Workable workable = null;
+					if (!WorkInProgressHelper.isWorkingCopy(part)) {
+						workable = doCheckOut(part);//从检出方法中得到已检出工作副本
+					} else {
+						workable = part;
 					}
-	        	} catch(WTPropertyVetoException e){
-	        		logger.error(">>>>>"+e);
-	        	} catch(WTException e){
-	        		logger.error(">>>>>"+e);
-	        	}finally {
+						workable = WorkInProgressHelper.service.checkin(workable, "AutoCheckIn");
+	        	} catch(WTPropertyVetoException e) {
+	        		logger.error(CLASSNAME+".doCheckIn:"+e);
+	        	} catch(WTException e) {
+	        		logger.error(CLASSNAME+".doCheckIn:"+e);
+	        	} finally {
 	                SessionServerHelper.manager.setAccessEnforced(enforce);
 	            }
 	        }
@@ -1044,31 +961,27 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * @throws WTException
 	 */
     @SuppressWarnings("deprecation")
-	public static WTPart reviseWTPart(WTPart part, String comment){
-		try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	              return (WTPart)RemoteMethodServer.getDefault().invoke("reviseWTPart", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class,String.class},
-	                		new Object[] { part,comment});
+	public static WTPart reviseWTPart(WTPart part, String comment) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (WTPart)RemoteMethodServer.getDefault().invoke("reviseWTPart", PartUtil.class.getName(), null, 
+						new Class[] { WTPart.class, String.class}, new Object[] { part, comment });
 	        } else {
 	        	WTPart wtpart = part;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 		        try {
-		            if (wtpart == null && !isPartExist(part.getNumber())) {
-		                return null;
+		        	if (wtpart == null) {
+		        		return null;
 		            }
 		            WTContainer container = wtpart.getContainer();
-		            WTContainerRef containerRef = WTContainerRef
-		                    .newWTContainerRef(container);
+		            WTContainerRef containerRef = WTContainerRef.newWTContainerRef(container);
 		            TeamReference teamReference = wtpart.getTeamId();
 		            Folder oldFoler = FolderHelper.getFolder(wtpart);// wtpart.getFolderingInfo().getFolder();
 		            if (oldFoler == null) {
 		                String strLocation = wtpart.getLocation();
-		                oldFoler = FolderHelper.service.getFolder(strLocation,
-		                        containerRef);
+		                oldFoler = FolderHelper.service.getFolder(strLocation, containerRef);
 		            }
-		            wtpart = (WTPart) VersionControlHelper.service
-		                    .newVersion((Versioned) wtpart);
+		            wtpart = (WTPart) VersionControlHelper.service.newVersion((Versioned) wtpart);
 		            if (wtpart != null) {
 		                wtpart.setTeamId(teamReference);
 		            }
@@ -1078,9 +991,9 @@ public class PartUtil implements RemoteAccess, Serializable {
 		            wtpart = (WTPart) PersistenceHelper.manager.save(wtpart);
 		            wtpart = (WTPart) PersistenceHelper.manager.refresh(wtpart);
 		        } catch (WTPropertyVetoException e) {
-		            logger.error(e.getLocalizedMessage(), e);
+		        	logger.error(CLASSNAME+".reviseWTPart:"+e);
 		        } catch (WTException e) {
-		            logger.error(">>>>>"+e);
+		        	logger.error(CLASSNAME+".reviseWTPart:"+e);
 		        } finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
@@ -1101,36 +1014,34 @@ public class PartUtil implements RemoteAccess, Serializable {
      * @return	if part is exist,return wokingCopy part
      * 				else return null
      */
-    public static WTPart getWorkingCopyOfPart(WTPart part){
-        try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	          return (WTPart)RemoteMethodServer.getDefault().invoke("getWorkingCopyOfPart", 
-	                		PartUtil.class.getName(), null, new Class[] {WTPart.class},
-	                		new Object[] { part});
+    public static WTPart getWorkingCopyOfPart(WTPart part) {
+    	try {
+    		if (!RemoteMethodServer.ServerFlag) {
+    			return (WTPart)RemoteMethodServer.getDefault().invoke("getWorkingCopyOfPart", PartUtil.class.getName(), 
+    					null, new Class[] { WTPart.class }, new Object[] { part });
 	        } else {
 	        	WTPart workingPart = null;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-		        try{
-			        if(part!=null && isPartExist(part.getNumber())){
-				        if (!WorkInProgressHelper.isCheckedOut(part)) {
-				            Folder folder = WorkInProgressHelper.service.getCheckoutFolder();
-				            CheckoutLink checkoutlink = WorkInProgressHelper.service.checkout(
-				                    part, folder, SessionHelper.manager.getPrincipal()
-				                            .getName());
-				            workingPart = (WTPart) checkoutlink.getWorkingCopy();
-				        } else {
-				            if (!WorkInProgressHelper.isWorkingCopy(part)) {
-				                workingPart = (WTPart) WorkInProgressHelper.service
-				                        .workingCopyOf(part);
-				            } else {
-				                workingPart = part;
-				            }
-				        }
+		        try {
+		        	if (part == null) {
+		        		return null;
+		        	}
+	        		if (!WorkInProgressHelper.isCheckedOut(part)) {
+	        			Folder folder = WorkInProgressHelper.service.getCheckoutFolder();
+			            CheckoutLink checkoutlink = WorkInProgressHelper.service.checkout(part, folder, 
+			            		SessionHelper.manager.getPrincipal().getName());
+			            workingPart = (WTPart) checkoutlink.getWorkingCopy();
+			        } else {
+			        	if (!WorkInProgressHelper.isWorkingCopy(part)) {
+			        		workingPart = (WTPart) WorkInProgressHelper.service.workingCopyOf(part);
+			            } else {
+			            	workingPart = part;
+			            }
 			        }
-		        } catch(WTException e){
-		        	logger.error(">>>>>"+e);
-		        } catch(WTPropertyVetoException e){
-		        	logger.error(">>>>>"+e);
+		        } catch(WTException e) {
+		        	logger.error(CLASSNAME+".getWorkingCopyOfPart:"+e);
+		        } catch(WTPropertyVetoException e) {
+		        	logger.error(CLASSNAME+".getWorkingCopyOfPart:"+e);
 		        } finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
@@ -1152,23 +1063,26 @@ public class PartUtil implements RemoteAccess, Serializable {
      * 				else return false
      * @throws WTException
      */
-    public static boolean hasUsageLink(WTPart parentPart,WTPartMaster childMaster){
-        try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	          return (boolean)RemoteMethodServer.getDefault().invoke("hasUsageLink", 
-	                		PartUtil.class.getName(), null, new Class[] {WTPart.class,WTPartMaster.class},
-	                		new Object[] { parentPart,childMaster});
+    public static boolean hasUsageLink(WTPart parentPart, WTPartMaster childMaster) {
+    	try {
+        	if (!RemoteMethodServer.ServerFlag) {
+        		return (boolean)RemoteMethodServer.getDefault().invoke("hasUsageLink", PartUtil.class.getName(), null, 
+        				new Class[] { WTPart.class, WTPartMaster.class }, new Object[] { parentPart, childMaster });
 	        } else {
 	        	boolean hasUsageLink = false;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 		        WTPartUsageLink usageLink;
 				try {
+					if (parentPart == null || childMaster == null) {
+						return false;
+					}
 					usageLink = getPartUsageLink(parentPart, childMaster);
-			        if (usageLink != null) {
-			            hasUsageLink = true;
-			        }
+					if (usageLink == null){
+						return false;
+					}
+		        	hasUsageLink = true;
 				} finally {
-		            SessionServerHelper.manager.setAccessEnforced(enforce);
+					SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
 				return hasUsageLink;
 	        }
@@ -1193,29 +1107,24 @@ public class PartUtil implements RemoteAccess, Serializable {
      *             Windchill exception
      */
     public static WTPartUsageLink getPartUsageLink(WTPart parentPart,WTPartMaster childMaster) {
-		try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	             return (WTPartUsageLink)RemoteMethodServer.getDefault().invoke("getPartUsageLink", 
-	                		PartUtil.class.getName(), null, new Class[] {WTPart.class,WTPart.class},
-	                		new Object[] { parentPart,childMaster});
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (WTPartUsageLink)RemoteMethodServer.getDefault().invoke("getPartUsageLink", PartUtil.class.getName(),
+						null, new Class[] { WTPart.class,WTPartMaster.class }, new Object[] { parentPart,childMaster });
 	        } else {
 	        	WTPartUsageLink usageLink = null;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 	        	try {
-			        if (parentPart != null && childMaster != null && isPartExist(parentPart.getNumber())
-			        		&& isPartExist(childMaster.getNumber())) {
-			            QueryResult queryresult;
-							queryresult = PersistenceHelper.manager.find(
-							        WTPartUsageLink.class, parentPart,
-							        WTPartUsageLink.USED_BY_ROLE, childMaster);
-			            if (queryresult == null || queryresult.size() == 0) {
-			                usageLink = null;
-			            } else {
-			                usageLink = (WTPartUsageLink) queryresult.nextElement();
-			            }
-			        }
+	        		if (parentPart == null || childMaster == null) {
+						return null;
+					}
+		            QueryResult queryresult = PersistenceHelper.manager.find(WTPartUsageLink.class, parentPart,
+						        WTPartUsageLink.USED_BY_ROLE, childMaster);
+		            if (queryresult != null && queryresult.size() != 0) {
+		            	usageLink = (WTPartUsageLink) queryresult.nextElement();
+		            }
 	        	} catch (WTException e) {
-	        		e.printStackTrace();
+	        		logger.error(CLASSNAME+".getPartUsageLink:"+e);
 	        	} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
@@ -1242,28 +1151,26 @@ public class PartUtil implements RemoteAccess, Serializable {
      * @throws WTException
      *             WindChill exception
      */
-    public static WTPartUsageLink createUsageLink(WTPart parentPart,WTPartMaster childMaster){
-		try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	            return (WTPartUsageLink)RemoteMethodServer.getDefault().invoke("createUsageLink", 
-	                		PartUtil.class.getName(), null, new Class[] {WTPart.class,WTPartMaster.class},
-	                		new Object[] { parentPart,childMaster});
+    public static WTPartUsageLink createUsageLink(WTPart parentPart, WTPartMaster childMaster) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (WTPartUsageLink)RemoteMethodServer.getDefault().invoke("createUsageLink", PartUtil.class.getName(),
+						null, new Class[] { WTPart.class, WTPartMaster.class }, new Object[] { parentPart,childMaster });
 	        } else {
 	        	WTPartUsageLink newLink = null;
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 	        	try {
-			    	if (parentPart != null && isPartExist(parentPart.getNumber()) && 
-			        		childMaster != null && isPartExist(childMaster.getNumber())) {
-				    	if(getSubPartByPartNumber(parentPart.getNumber()).contains(childMaster)){
-				    		newLink = getPartUsageLink(parentPart, childMaster);
-				    	}else{
-								newLink = WTPartUsageLink.newWTPartUsageLink(parentPart,
-								        childMaster);
-				            PersistenceServerHelper.manager.insert(newLink);
-				    	}
-			        }
+	        		if (parentPart == null || childMaster == null) {
+						return null;
+					}
+			    	if (getSubPartByPartNumber(parentPart.getNumber()).contains(childMaster)) {
+			    		newLink = getPartUsageLink(parentPart, childMaster);
+			    	} else {
+			    		newLink = WTPartUsageLink.newWTPartUsageLink(parentPart, childMaster);
+			            PersistenceServerHelper.manager.insert(newLink);
+			    	}
 	        	} catch (WTException e) {
-	        		logger.error(">>>>>"+e);
+	        		logger.error(CLASSNAME+".createUsageLink:"+e);
 	        	} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
@@ -1285,36 +1192,31 @@ public class PartUtil implements RemoteAccess, Serializable {
      * 		if root and childPart is exist in windChill,childPart is the subPart,remove the childPart
      * 		else there is nothing to do
      */
-    public static void removeUseLink(WTPart childPart, WTPart root){
-		try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	              RemoteMethodServer.getDefault().invoke("removeUseLink", 
-	                		PartUtil.class.getName(), null, new Class[] { WTPart.class,WTPart.class},
-	                		new Object[] { childPart,root});
+    public static void removeUseLink(WTPart childPart, WTPart root) {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				RemoteMethodServer.getDefault().invoke("removeUseLink", PartUtil.class.getName(), null, new Class[] 
+						{ WTPart.class,WTPart.class }, new Object[] { childPart,root });
 	        } else {
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-	        	try{
-			        if (childPart != null || root != null) {
-				        WTPartMaster partMaster = (WTPartMaster) childPart.getMaster();
-				        QuerySpec queryspec = new QuerySpec(WTPartUsageLink.class);
-				        queryspec.appendWhere(
-				                new SearchCondition(WTPartUsageLink.class,
-				                        "roleAObjectRef.key", "=", PersistenceHelper
-				                                .getObjectIdentifier(root)), new int[] { 0 });
-				        queryspec.appendAnd();
-				        queryspec.appendWhere(
-				                new SearchCondition(WTPartUsageLink.class,
-				                        "roleBObjectRef.key", "=", PersistenceHelper
-				                                .getObjectIdentifier(partMaster)),
-				                                new int[] { 0 });
-				        QueryResult qr = PersistenceServerHelper.manager.query(queryspec);
-				        while (qr.hasMoreElements()) {
-				            WTPartUsageLink link = (WTPartUsageLink) qr.nextElement();
-				            PersistenceServerHelper.manager.remove(link);
-				        }
+	        	try {
+	        		if (childPart == null || root == null) {
+	        			return;
+	        		}
+        			WTPartMaster partMaster = (WTPartMaster) childPart.getMaster();
+			        QuerySpec queryspec = new QuerySpec(WTPartUsageLink.class);
+			        queryspec.appendWhere( new SearchCondition(WTPartUsageLink.class, "roleAObjectRef.key", "=", 
+			        		PersistenceHelper.getObjectIdentifier(root)), new int[] { 0 });
+			        queryspec.appendAnd();
+			        queryspec.appendWhere( new SearchCondition(WTPartUsageLink.class, "roleBObjectRef.key", "=", 
+			        		PersistenceHelper.getObjectIdentifier(partMaster)), new int[] { 0 });
+			        QueryResult qr = PersistenceServerHelper.manager.query(queryspec);
+			        while (qr.hasMoreElements()) {
+			        	WTPartUsageLink link = (WTPartUsageLink) qr.nextElement();
+			            PersistenceServerHelper.manager.remove(link);
 			        }
 	        	} catch (WTException e) {
-	        		logger.error(">>>>>"+e);
+	        		logger.error(CLASSNAME+".removeUseLink:"+e);
 	        	} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
@@ -1335,27 +1237,25 @@ public class PartUtil implements RemoteAccess, Serializable {
      * 		if root is exist in windChill and has subParts,remove those subParts
      * 		else there is nothing to do 
      */
-    public static void removeAllUseLink(WTPart root){
-        try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	          RemoteMethodServer.getDefault().invoke("removeAllUseLink", 
-	                		PartUtil.class.getName(), null, new Class[] {WTPart.class},
-	                		new Object[] { root});
+    public static void removeAllUseLink(WTPart root) {
+    	try { 
+    		if (!RemoteMethodServer.ServerFlag) {
+    			RemoteMethodServer.getDefault().invoke("removeAllUseLink", PartUtil.class.getName(), null, new Class[] 
+    					{ WTPart.class }, new Object[] { root });
 	        } else {
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 	        	try {
-			    	if(root!=null && isPartExist(root.getNumber())){
-				        QueryResult qr;
-							qr = WTPartHelper.service.getUsesWTParts(root,
-							        WTPartHelper.service.findWTPartConfigSpec());
-				        while (qr.hasMoreElements()) {
-				            Object[] obj = (Object[]) qr.nextElement();
-				            WTPartUsageLink link = (WTPartUsageLink) obj[0];
-				            PersistenceServerHelper.manager.remove(link);
-				        }
+			    	if (root == null) {
+			    		return;
 			    	}
+		    		QueryResult qr = WTPartHelper.service.getUsesWTParts(root, WTPartHelper.service.findWTPartConfigSpec());
+			        while (qr.hasMoreElements()) {
+			        	Object[] obj = (Object[]) qr.nextElement();
+			            WTPartUsageLink link = (WTPartUsageLink) obj[0];
+			            PersistenceServerHelper.manager.remove(link);
+			        }
 	        	} catch (WTException e) {
-	        		logger.error(">>>>>"+e);
+	        		logger.error(CLASSNAME+".removeAllUseLink:"+e);
 	        	} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
@@ -1376,36 +1276,33 @@ public class PartUtil implements RemoteAccess, Serializable {
      * @throws WTException
      */
     @SuppressWarnings("unchecked")
-	public static List<WTPart> getParentsBychildPart(WTPart child){
-        try{
-	        if (!RemoteMethodServer.ServerFlag) {
-	          return (List<WTPart>)RemoteMethodServer.getDefault().invoke("getParents", 
-	                		PartUtil.class.getName(), null, new Class[] {WTPart.class},
-	                		new Object[] { child});
+	public static List<WTPart> getParentsBychildPart(WTPart child) {
+    	try {
+    		if (!RemoteMethodServer.ServerFlag) {
+    			return (List<WTPart>)RemoteMethodServer.getDefault().invoke("getParentsBychildPart", PartUtil.class.getName(), null, 
+    					new Class[] { WTPart.class }, new Object[] { child });
 	        } else {
-	        	List<WTPart> result = new ArrayList<WTPart>();
+	        	List<WTPart> parentList = new ArrayList<WTPart>();
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 	        	try {
-				    if(child!=null && isPartExist(child.getNumber())){
-				        QuerySpec queryspec = new QuerySpec(WTPart.class, WTPartUsageLink.class);
-							queryspec.appendWhere(
-							        VersionControlHelper.getSearchCondition(WTPart.class, true),
-							        new int[] { 0, 1 });
-				        QueryResult qr = PersistenceHelper.manager.navigate(child.getMaster(),
-				                "usedBy", queryspec, true);
-				        LatestConfigSpec lcs = new LatestConfigSpec();
-				        qr = lcs.process(qr);
-				        while (qr.hasMoreElements()) {
-				            WTPart parent = (WTPart) qr.nextElement();
-				            result.add(parent);
-				        }
-			    	}
+	        		if (child ==null) {
+	        			return parentList;
+	        		}
+        			QuerySpec queryspec = new QuerySpec(WTPart.class, WTPartUsageLink.class);
+					queryspec.appendWhere(VersionControlHelper.getSearchCondition(WTPart.class, true), new int[] { 0, 1 });
+			        QueryResult qr = PersistenceHelper.manager.navigate(child.getMaster(), "usedBy", queryspec, true);
+			        LatestConfigSpec lcs = new LatestConfigSpec();
+			        qr = lcs.process(qr);
+			        while (qr.hasMoreElements()) {
+			        	WTPart parent = (WTPart) qr.nextElement();
+			        	parentList.add(parent);
+			        }
 	        	} catch (WTException e) {
-	        		logger.error(">>>>>"+e);
+	        		logger.error(CLASSNAME+".getParentsBychildPart:"+e);
 	        	} finally {
 		            SessionServerHelper.manager.setAccessEnforced(enforce);
 		        }
-	        	return result;
+	        	return parentList;
 	        }
         } catch (RemoteException e) {
             logger.error(e.getMessage(),e);
@@ -1433,10 +1330,10 @@ public class PartUtil implements RemoteAccess, Serializable {
 //		System.out.println("4-------------"+getPartByOid(""));
 //		System.out.println("5-------------"+getPartByOid(null));
 //		System.out.println("/*********************getPartByNumber********************/");
-		System.out.println(getPartByNumber("0000000022"));
-		System.out.println(getPartByNumber("asd"));
-		System.out.println(getPartByNumber(""));
-		System.out.println(getPartByNumber(null));
+//		System.out.println(getPartByNumber("0000000022"));
+//		System.out.println(getPartByNumber("asd"));
+//		System.out.println(getPartByNumber(""));
+//		System.out.println(getPartByNumber(null));
 //		System.out.println("/*********************getPartByProperties********************/");
 //		List<WTPart> list = getPartByProperties("0000000022", "", "", "");
 //		for (int i = 0; i < list.size(); i++) {
@@ -1570,14 +1467,6 @@ public class PartUtil implements RemoteAccess, Serializable {
 //		System.out.println(isModifiable(getPartByNumber("GC12345")));
 //		System.out.println(isModifiable(getPartByNumber("asd")));
 //		System.out.println(isModifiable(null));
-//		System.out.println("/*********************getLifeCycleState********************/");
-//		System.out.println(getLifeCycleState(getPartByNumber("0000000022")));
-//		System.out.println(getLifeCycleState(getPartByNumber("asd")));
-//		System.out.println(getLifeCycleState(null));
-//		System.out.println("/*********************getLifeCycleTemplate********************/");
-//		System.out.println(getLifeCycleTemplate(getPartByNumber("0000000022")));
-//		System.out.println(getLifeCycleTemplate(getPartByNumber("asd")));
-//		System.out.println(getLifeCycleTemplate(null));
 //		System.out.println("/*********************doCheckOut********************/");
 //		System.out.println(doCheckOut(getPartByNumber("0000000022")));
 //		System.out.println(doCheckOut(getPartByNumber("asd")));
@@ -1633,14 +1522,12 @@ public class PartUtil implements RemoteAccess, Serializable {
 //		System.out.println(hasUsageLink(null, null));
 	}
 	
-	public static void main(String[] args) throws RemoteException, InvocationTargetException, WTException{
+	public static void main(String[] args) throws RemoteException, InvocationTargetException, WTException {
 		RemoteMethodServer r = RemoteMethodServer.getDefault();
 		r.setUserName("wcadmin");
 		r.setPassword("wcadmin");
 		if (!RemoteMethodServer.ServerFlag) {
-			RemoteMethodServer.getDefault().invoke("test", PartUtil.class.getName(), null,
-					new Class[] {},
-					new Object[] {});
+			RemoteMethodServer.getDefault().invoke("test", PartUtil.class.getName(), null, new Class[] {}, new Object[] {});
 		}
 	}
 }
