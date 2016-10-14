@@ -5,9 +5,8 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-
-import com.google.gwt.libideas.resources.client.CssResource.ClassName;
 
 import wt.fc.PersistenceHelper;
 import wt.fc.QueryResult;
@@ -45,15 +44,16 @@ public class GroupUtil implements RemoteAccess {
 	 */
 	@SuppressWarnings("unchecked")
 	public static ArrayList<WTUser> getGroupMembersOfUser(WTGroup group)throws WTException {
-			try {
-				if (!RemoteMethodServer.ServerFlag) {
-						return (ArrayList<WTUser>) RemoteMethodServer.getDefault().invoke("getGroupMembersOfUser", GroupUtil.class.getName(),null, 
-										new Class[] { WTGroup.class },new Object[] { group });
-				} else {
-					boolean isAccessEnforced = SessionServerHelper.manager.isAccessEnforced();
-					ArrayList<WTUser> memebers = new ArrayList<WTUser>();
-					try {
-						Enumeration member = group.members();
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (ArrayList<WTUser>) RemoteMethodServer.getDefault().invoke("getGroupMembersOfUser", GroupUtil.class.getName(),null, 
+							new Class[] { WTGroup.class },new Object[] { group });
+			} else {
+				boolean isAccessEnforced = SessionServerHelper.manager.isAccessEnforced();
+				ArrayList<WTUser> memebers = new ArrayList<WTUser>();
+				try {
+					if(group != null){
+						Enumeration<WTPrincipal> member = group.members();
 						while (member.hasMoreElements()) {
 							WTPrincipal principal = (WTPrincipal) member.nextElement();
 							if (principal instanceof WTUser)
@@ -61,25 +61,26 @@ public class GroupUtil implements RemoteAccess {
 							else if (principal instanceof WTGroup)
 								memebers.addAll(getGroupMembersOfUser((WTGroup) principal));
 						}
-					} catch (WTException e) {
-						logger.error(CLASSNAME+".getGroupMembersOfUser:"+e);
-					} finally {
-						SessionServerHelper.manager.setAccessEnforced(isAccessEnforced);
 					}
-					return memebers;
+				} catch (WTException e) {
+					logger.error(CLASSNAME+".getGroupMembersOfUser:"+e);
+				} finally {
+					SessionServerHelper.manager.setAccessEnforced(isAccessEnforced);
 				}
-			} catch (RemoteException e) {
-				logger.error(e.getMessage(),e);
-			} catch (InvocationTargetException e) {
-				logger.error(e.getMessage(),e);
+				return memebers;
 			}
-			return null;
+		} catch (RemoteException e) {
+			logger.error(e.getMessage(),e);
+		} catch (InvocationTargetException e) {
+			logger.error(e.getMessage(),e);
+		}
+		return null;
 	}
 
 	/**
 	 * delteGroupByName
 	 * @author zhangxj
-	 * @param groupName
+	 * @param group
 	 * @throws WTException
 	 */
 	public static void delteGroupByName(WTGroup group)  {
@@ -90,8 +91,10 @@ public class GroupUtil implements RemoteAccess {
 			} else {
 				boolean isAccessEnforced = SessionServerHelper.manager.isAccessEnforced();
 				try {
-					SessionServerHelper.manager.setAccessEnforced(false);
-					OrganizationServicesHelper.manager.delete(group);
+					if(group != null){
+						SessionServerHelper.manager.setAccessEnforced(false);
+						OrganizationServicesHelper.manager.delete(group);
+					}
 				} catch (WTException e) {
 					logger.error(CLASSNAME+".delteGroupByName:"+e);
 				}finally{
@@ -109,29 +112,31 @@ public class GroupUtil implements RemoteAccess {
 	 * 给组中添加用户
 	 * 
 	 * @param group
-	 * @param role
+	 * @param wtUser
 	 * @throws WTException
 	 */
 	public static void addGroupSystem(WTGroup group, WTUser wtUser) {
-			try {
-				if (!RemoteMethodServer.ServerFlag) {
-						RemoteMethodServer.getDefault().invoke("addGroupSystem",GroupUtil.class.getName(), null,
-								new Class[] { WTGroup.class, WTUser.class },new Object[] { group, wtUser });
-				} else {
-					boolean isAccessEnforced = SessionServerHelper.manager.isAccessEnforced();
-					try {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+					RemoteMethodServer.getDefault().invoke("addGroupSystem",GroupUtil.class.getName(), null,
+							new Class[] { WTGroup.class, WTUser.class },new Object[] { group, wtUser });
+			} else {
+				boolean isAccessEnforced = SessionServerHelper.manager.isAccessEnforced();
+				try {
+					if(group !=null && wtUser != null){
 						group.addMember(wtUser);
-					} catch (WTException e) {
-						logger.error(CLASSNAME+".addGroupSystem:"+e);
-					}finally{
-						SessionServerHelper.manager.setAccessEnforced(isAccessEnforced);
 					}
+				} catch (WTException e) {
+					logger.error(CLASSNAME+".addGroupSystem:"+e);
+				}finally{
+					SessionServerHelper.manager.setAccessEnforced(isAccessEnforced);
 				}
-			} catch (RemoteException e) {
-				logger.error(e.getMessage(),e);
-			} catch (InvocationTargetException e) {
-				logger.error(e.getMessage(),e);
 			}
+		} catch (RemoteException e) {
+			logger.error(e.getMessage(),e);
+		} catch (InvocationTargetException e) {
+			logger.error(e.getMessage(),e);
+		}
 	}
 
 	/**
@@ -142,16 +147,18 @@ public class GroupUtil implements RemoteAccess {
 	 * @return
 	 * @throws WTException
 	 */
+	@SuppressWarnings("unchecked")
 	public static boolean isGroupMember(WTUser user, WTGroup group) {
-			try {
-				if (!RemoteMethodServer.ServerFlag) {
-						RemoteMethodServer.getDefault().invoke("isGroupMember",GroupUtil.class.getName(), null,
-								new Class[] { WTUser.class, WTGroup.class },new Object[] { user, group });
-				} else {
-					boolean isAccessEnforced = SessionServerHelper.manager.isAccessEnforced();
-						boolean flag = false;
-						try {
-							Enumeration enu = group.members();
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+					RemoteMethodServer.getDefault().invoke("isGroupMember",GroupUtil.class.getName(), null,
+							new Class[] { WTUser.class, WTGroup.class },new Object[] { user, group });
+			} else {
+				boolean isAccessEnforced = SessionServerHelper.manager.isAccessEnforced();
+					boolean flag = false;
+					try {
+						if(user != null && group != null){
+							Enumeration<WTPrincipal> enu = group.members();
 							if (enu == null)
 								return false;
 							while (enu.hasMoreElements()) {
@@ -170,19 +177,20 @@ public class GroupUtil implements RemoteAccess {
 									}
 								}
 							}
-						} catch (WTException e) {
-							logger.error(CLASSNAME+".isGroupMember:"+e);
-						}finally{
-							SessionServerHelper.manager.setAccessEnforced(isAccessEnforced);
 						}
-						return flag;
-				}
-			} catch (RemoteException e) {
-				logger.error(e.getMessage(),e);
-			} catch (InvocationTargetException e) {
-				logger.error(e.getMessage(),e);
+					} catch (WTException e) {
+						logger.error(CLASSNAME+".isGroupMember:"+e);
+					}finally{
+						SessionServerHelper.manager.setAccessEnforced(isAccessEnforced);
+					}
+					return flag;
 			}
-			return false;
+		} catch (RemoteException e) {
+			logger.error(e.getMessage(),e);
+		} catch (InvocationTargetException e) {
+			logger.error(e.getMessage(),e);
+		}
+		return false;
 	}
 
 	/**
@@ -192,16 +200,17 @@ public class GroupUtil implements RemoteAccess {
 	 * @return ArrayList<WTGroup>
 	 */
 	public static WTGroup getNonSiteGroupByName(String groupName) {
-			try {
-				if (!RemoteMethodServer.ServerFlag) {
-						RemoteMethodServer.getDefault().invoke("getNonSiteGroupByName", GroupUtil.class.getName(), null,
-								new Class[] { String.class }, new Object[] { groupName });
-				} else {
-					boolean isAccessEnforced = SessionServerHelper.manager.isAccessEnforced();
-					WTGroup group = null;
-					try {
-						if ((groupName == null) || (groupName.trim().isEmpty()))
-							return null;
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+					RemoteMethodServer.getDefault().invoke("getNonSiteGroupByName", GroupUtil.class.getName(), null,
+							new Class[] { String.class }, new Object[] { groupName });
+			} else {
+				boolean isAccessEnforced = SessionServerHelper.manager.isAccessEnforced();
+				WTGroup group = null;
+				try {
+					if ((groupName == null) || (groupName.trim().isEmpty())){
+						return null;
+					}else {
 						QuerySpec qs = new QuerySpec(WTGroup.class);
 						int[] indx0 = new int[] { 0 };
 						SearchCondition sc = new SearchCondition(WTGroup.class,WTGroup.NAME, SearchCondition.EQUAL, groupName, false);
@@ -213,25 +222,26 @@ public class GroupUtil implements RemoteAccess {
 						qs.appendAnd();
 						qs.appendWhere(new SearchCondition(WTGroup.class,"containerReference.key.classname",SearchCondition.EQUAL,
 								"wt.inf.container.OrgContainer"), indx0);
-						QueryResult qr = PersistenceHelper.manager .find((StatementSpec) qs);
+						QueryResult qr = PersistenceHelper.manager.find((StatementSpec) qs);
 						if (qr.hasMoreElements()) {
 							WTGroup wtGroup = (WTGroup) qr.nextElement();
 							if (!(wtGroup instanceof WTOrganization))
 								group = wtGroup;
 						}
-					} catch (WTException e) {
-						logger.error(CLASSNAME+".getNonSiteGroupByName:"+e);
-					}finally{
-						SessionServerHelper.manager.setAccessEnforced(isAccessEnforced);
 					}
-					return group;
+				} catch (WTException e) {
+					logger.error(CLASSNAME+".getNonSiteGroupByName:"+e);
+				} finally {
+					SessionServerHelper.manager.setAccessEnforced(isAccessEnforced);
 				}
-			} catch (RemoteException e) {
-				logger.error(e.getMessage(),e);
-			} catch (InvocationTargetException e) {
-				logger.error(e.getMessage(),e);
+				return group;
 			}
-			return null;
+		} catch (RemoteException e) {
+			logger.error(e.getMessage(),e);
+		} catch (InvocationTargetException e) {
+			logger.error(e.getMessage(),e);
+		}
+		return null;
 	}
 
 	/**
@@ -242,14 +252,15 @@ public class GroupUtil implements RemoteAccess {
 	 * @throws WTException
 	 */
 	public static ArrayList<WTGroup> fuzzySearchNonSiteGroupsByName(String groupName){
-			try {
-				if (!RemoteMethodServer.ServerFlag) {
-						RemoteMethodServer.getDefault().invoke("fuzzySearchNonSiteGroupsByName",GroupUtil.class.getName(), null,
-								new Class[] { String.class },new Object[] { groupName });
-				}else{
-					boolean flagAccess = SessionServerHelper .manager. setAccessEnforced(false);
-					ArrayList<WTGroup> list = new ArrayList<WTGroup>();
-					try {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+					RemoteMethodServer.getDefault().invoke("fuzzySearchNonSiteGroupsByName",GroupUtil.class.getName(), null,
+							new Class[] { String.class },new Object[] { groupName });
+			} else {
+				boolean flagAccess = SessionServerHelper .manager. setAccessEnforced(false);
+				ArrayList<WTGroup> list = new ArrayList<WTGroup>();
+				try {
+					if(StringUtils.isEmpty(groupName)){
 						QuerySpec qs = new QuerySpec(WTGroup.class);
 						int[] indx0 = new int[] { 0 };
 						SearchCondition sc = new SearchCondition(WTGroup.class,WTGroup.NAME, SearchCondition.LIKE, "%" + groupName + "%",false);
@@ -267,19 +278,20 @@ public class GroupUtil implements RemoteAccess {
 							if (!(wtGroup instanceof WTOrganization))
 								list.add(wtGroup);
 						}
-					} catch (WTException e) {
-						logger.error(CLASSNAME+".fuzzySearchNonSiteGroupsByName:"+e);
-					}finally{
-						SessionServerHelper.manager.setAccessEnforced(flagAccess);
 					}
-					return list;
+				} catch (WTException e) {
+					logger.error(CLASSNAME+".fuzzySearchNonSiteGroupsByName:"+e);
+				}finally{
+					SessionServerHelper.manager.setAccessEnforced(flagAccess);
 				}
-			} catch (RemoteException e) {
-				logger.error(e.getMessage(),e);
-			} catch (InvocationTargetException e) {
-				logger.error(e.getMessage(),e);
+				return list;
 			}
-			return null;
+		} catch (RemoteException e) {
+			logger.error(e.getMessage(),e);
+		} catch (InvocationTargetException e) {
+			logger.error(e.getMessage(),e);
+		}
+		return null;
 	}
 
 	/**
@@ -290,31 +302,34 @@ public class GroupUtil implements RemoteAccess {
 	 * @throws WTPropertyVetoException
 	 */
 	public static WTGroup createGroup(String group_name, String path)throws WTPropertyVetoException {
-			try {
-				if (!RemoteMethodServer.ServerFlag) {
-						RemoteMethodServer.getDefault().invoke("createGroup",GroupUtil.class.getName(), null,
-								new Class[] { String.class, String.class },new Object[] { group_name, path });
-				}else{
-					boolean flagAccess = SessionServerHelper.manager.setAccessEnforced(false);
-					WTGroup group =null;
-					try {
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+					RemoteMethodServer.getDefault().invoke("createGroup",GroupUtil.class.getName(), null,
+							new Class[] { String.class, String.class },new Object[] { group_name, path });
+			}else{
+				boolean flagAccess = SessionServerHelper.manager.setAccessEnforced(false);
+				WTGroup group =null;
+				try {
+					if(StringUtils.isEmpty(group_name) && StringUtils.isEmpty(path)){
 						group = WTGroup.newWTGroup(group_name);
+//						group.setDn(paramString, paramBoolean);
 						group.setDn("cn="+ group_name+ ",cn=Public,o=huaqin,ou=people,cn=AdministrativeLdap,cn=Windchill_10.2,o=huaqin");
 						WTContainer wtcontainer = WTContainerHelper.service.getByPath(path).getContainer();
 						group.setContainer(wtcontainer);
 						OrganizationServicesHelper.manager.createPrincipal(group);
-					} catch (WTException e) {
-						logger.error(CLASSNAME+".createGroup:"+e);
-					}finally{
-						SessionServerHelper.manager.setAccessEnforced(flagAccess);
 					}
-					return group;
+				} catch (WTException e) {
+					logger.error(CLASSNAME+".createGroup:"+e);
+				}finally{
+					SessionServerHelper.manager.setAccessEnforced(flagAccess);
 				}
-			} catch (RemoteException e) {
-				logger.error(e.getMessage(),e);
-			} catch (InvocationTargetException e) {
-				logger.error(e.getMessage(),e);
+				return group;
 			}
-			return null;
-	}
+		} catch (RemoteException e) {
+			logger.error(e.getMessage(),e);
+		} catch (InvocationTargetException e) {
+			logger.error(e.getMessage(),e);
+		}
+		return null;
+}
 }

@@ -34,13 +34,13 @@ import wt.util.WTException;
 	    public static  boolean isUppercaseAttributesValue(Persistable p, String key) throws WTException{
 	    	try {
 				if (!RemoteMethodServer.ServerFlag) {
-					return (boolean) RemoteMethodServer.getDefault().invoke("isUppercaseAttributesValue",ConstraintUtil.class.getName(),null,new Class[] { Persistable.class,String.class},
+					 RemoteMethodServer.getDefault().invoke("isUppercaseAttributesValue",ConstraintUtil.class.getName(),null,new Class[] { Persistable.class,String.class},
 							new Object[] { p,key });
 				}else {
 					boolean foronce = wt.session.SessionServerHelper.manager.setAccessEnforced(false);
 					boolean falg = true;
 						try {
-							if(!StringUtils.isEmpty(key)){
+							if(!StringUtils.isEmpty(key) && p != null){
 								String ibaValue =(String) WCUtil.getMBAValue(p,key);
 								for(int i = 0;i<ibaValue.length();i++){
 									char c = ibaValue.charAt(i);
@@ -75,14 +75,13 @@ import wt.util.WTException;
 	    public static  boolean isLowerCaseAttributesValue(Persistable p, String key) throws WTException{
 	    	try {
 				if (!RemoteMethodServer.ServerFlag) {
-					return (boolean) RemoteMethodServer.getDefault().invoke("isUppercaseAttributesValue",ConstraintUtil.class.getName(),null,new Class[] { Persistable.class,String.class},
+					 RemoteMethodServer.getDefault().invoke("isUppercaseAttributesValue",ConstraintUtil.class.getName(),null,new Class[] { Persistable.class,String.class},
 							new Object[] { p,key });
 				}else {
 					boolean foronce = wt.session.SessionServerHelper.manager.setAccessEnforced(false);
 					boolean falg = true;
 					try {
-						if(!StringUtils.isEmpty(key)
-								){
+						if(!StringUtils.isEmpty(key) && p != null){
 							String ibaValue =(String)WCUtil. getMBAValue(p,key);
 							for(int i = 0;i<ibaValue.length();i++){
 								char c = ibaValue.charAt(i);
@@ -117,13 +116,13 @@ import wt.util.WTException;
 	    public static  boolean isNullAttributesValue(Persistable p, String key) throws WTException{
 	    	try {
 				if (!RemoteMethodServer.ServerFlag) {
-				return	(boolean) RemoteMethodServer.getDefault().invoke("isUppercaseAttributesValue",ConstraintUtil.class.getName(),null,new Class[] { Persistable.class,String.class},
+				 RemoteMethodServer.getDefault().invoke("isUppercaseAttributesValue",ConstraintUtil.class.getName(),null,new Class[] { Persistable.class,String.class},
 							new Object[] { p,key });
 				}else {
 					boolean enforonce = wt.session.SessionServerHelper.manager.setAccessEnforced(false);
 					boolean falg = false;
 					try {
-						if(!StringUtils.isEmpty(key)){
+						if(!StringUtils.isEmpty(key) && p != null){
 							String ibaValue =(String)WCUtil. getMBAValue(p,key);
 							if(ibaValue==null||"".equals(ibaValue)){
 								falg=true;
@@ -153,7 +152,7 @@ import wt.util.WTException;
 	    public static boolean isEnumValue(String systemEnumName, String value){
 	    	try {
 				if (!RemoteMethodServer.ServerFlag) {
-				return	(boolean) RemoteMethodServer.getDefault().invoke("isEnumValue",ConstraintUtil.class.getName(),null,new Class[] { String.class,String.class},
+				 RemoteMethodServer.getDefault().invoke("isEnumValue",ConstraintUtil.class.getName(),null,new Class[] { String.class,String.class},
 							new Object[] { systemEnumName,value });
 				} else {
 					boolean enforonce = wt.session.SessionServerHelper.manager.setAccessEnforced(false);

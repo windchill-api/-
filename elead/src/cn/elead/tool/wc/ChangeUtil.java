@@ -57,7 +57,7 @@ public class ChangeUtil implements RemoteAccess,Serializable {
     public static boolean isIssueExist(String issueNumber) {
     	try {
     		if (!RemoteMethodServer.ServerFlag) {
-    			return (boolean) RemoteMethodServer.getDefault().invoke("isIssueExist", ChangeUtil.class.getName(), 
+    			return (boolean) RemoteMethodServer.getDefault().invoke("isIssueExist", ChangeUtil.class.getName(),
     					null, new Class[] { String.class }, new Object[] { issueNumber });
  	        } else {
  	        	boolean flag = false;
@@ -96,7 +96,7 @@ public class ChangeUtil implements RemoteAccess,Serializable {
     public static boolean isECRExist(String ecrNumber) {
     	try {
     		if (!RemoteMethodServer.ServerFlag) {
-    			return (boolean) RemoteMethodServer.getDefault().invoke("isECRExist", ChangeUtil.class.getName(), 
+    			return (boolean) RemoteMethodServer.getDefault().invoke("isECRExist", ChangeUtil.class.getName(),
     					null, new Class[] { String.class }, new Object[] { ecrNumber });
  	        } else {
  	        	boolean flag = false;
@@ -116,7 +116,7 @@ public class ChangeUtil implements RemoteAccess,Serializable {
  	        	} finally {
  	        		SessionServerHelper.manager.setAccessEnforced(enforce);
  	            }
- 	        	return flag;
+				return  flag;
  	        }
          } catch (RemoteException e) {
              logger.error(e.getMessage(),e);
@@ -479,7 +479,6 @@ public class ChangeUtil implements RemoteAccess,Serializable {
      * 				else if number is not exist,return null
      * 				else if number is empty or number is null,return null
      */
-    @SuppressWarnings("deprecation")
 	public static WTChangeOrder2 getECNByNumber(String number){
     	try {
     		if (!RemoteMethodServer.ServerFlag) {
@@ -523,14 +522,13 @@ public class ChangeUtil implements RemoteAccess,Serializable {
      * @throws ChangeException2
      * @throws WTException
      */
-    @SuppressWarnings("unchecked")
-	public static List<WTObject> getChangeBefore(WTChangeOrder2 ecn) {
+	public static List getChangeBefore(WTChangeOrder2 ecn) {
     	try {
     		if (!RemoteMethodServer.ServerFlag) {
-    			return (List<WTObject>) RemoteMethodServer.getDefault().invoke("getChangeBefore", ChangeUtil.class.getName(), 
+    			return (List) RemoteMethodServer.getDefault().invoke("getChangeBefore", ChangeUtil.class.getName(),
     					null, new Class[] { WTChangeOrder2.class }, new Object[] { ecn });
 	        } else {
-	        	List<WTObject> list = new ArrayList<WTObject>();
+	        	List list = new ArrayList();
 	        	boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 	        	try {
 	        		if (ecn ==  null) {
@@ -569,8 +567,7 @@ public class ChangeUtil implements RemoteAccess,Serializable {
      * 				else if ecn is empty or ecn is null,return null
      * @throws WTException
      */
-    @SuppressWarnings("unchecked")
-	public static List<WTObject> getChangeAfter(WTChangeOrder2 ecn) {
+	public static List<?> getChangeAfter(WTChangeOrder2 ecn) {
     	try {
     		if (!RemoteMethodServer.ServerFlag) {
     			return (List<WTObject>) RemoteMethodServer.getDefault().invoke("getChangeAfter", ChangeUtil.class.getName(),
@@ -886,7 +883,7 @@ public class ChangeUtil implements RemoteAccess,Serializable {
     
     /**
      * get PR by ECR
-     * @param request
+     * @param ecr
      * @return		if ecr is exist,return pr
      * 				else if ecr is not exist,return []
      * 				else if ecr is null,return []

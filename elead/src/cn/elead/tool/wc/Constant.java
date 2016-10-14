@@ -18,7 +18,7 @@ public class Constant
 	public static String TYPE = "TYPE"; 
 	public static String FOLDER = "FOLDER"; // create folder
     
-	public static Map<WTContainer, Boolean> containerMap = new HashMap<>();
+	public static Map<WTContainer, Boolean> containerMap = new HashMap<WTContainer, Boolean>();
 	public static final Role roleMember = Role.toRole("MEMBERS"); 
 	public static final WTPrincipal principal = null;
 	public static final WTPrincipalReference principalReference = null;

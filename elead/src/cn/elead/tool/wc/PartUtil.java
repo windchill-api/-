@@ -11,6 +11,8 @@ import org.apache.log4j.Logger;
 
 import wt.doc.WTDocument;
 import wt.doc.WTDocumentMaster;
+import wt.fc.Identified;
+import wt.fc.IdentityHelper;
 import wt.fc.PersistenceHelper;
 import wt.fc.PersistenceServerHelper;
 import wt.fc.QueryResult;
@@ -27,8 +29,10 @@ import wt.org.WTOrganization;
 import wt.part.WTPart;
 import wt.part.WTPartHelper;
 import wt.part.WTPartMaster;
+import wt.part.WTPartMasterIdentity;
 import wt.part.WTPartUsageLink;
 import wt.pds.StatementSpec;
+import wt.pom.Transaction;
 import wt.query.QuerySpec;
 import wt.query.SearchCondition;
 import wt.query.TableColumn;
@@ -63,10 +67,10 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * @return	if strNumber exist in windChill, return true;	such as: strNumber = "0000000022"
      * 				else return false;	such as: strNumber = "asd" or strNumber = ""  or strNumber = null
 	 */
-	public static boolean isPartExist(String strNumber) {
+	public static Boolean isPartExist(String strNumber) {
 		try {
 			if (!RemoteMethodServer.ServerFlag) {
-				return (boolean) RemoteMethodServer.getDefault().invoke("isPartExist", PartUtil.class.getName(), null,
+				return (Boolean) RemoteMethodServer.getDefault().invoke("isPartExist", PartUtil.class.getName(), null,
 						new Class[] { String.class }, new Object[] { strNumber });
 			} else {
 				boolean flag = false;
@@ -318,6 +322,7 @@ public class PartUtil implements RemoteAccess, Serializable {
         }
         return null;
     }
+    
     
     /**
      * get type by part
@@ -768,10 +773,10 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * @return	if part is exist in windChill and is checkOut,return true
 	 * 				else return false
 	 */
-	public static boolean isCheckOut(WTPart part) {
+	public static Boolean isCheckOut(WTPart part) {
 		try {
 			if (!RemoteMethodServer.ServerFlag) {
-				return (boolean)RemoteMethodServer.getDefault().invoke("isCheckOut", PartUtil.class.getName(), 
+				return (Boolean)RemoteMethodServer.getDefault().invoke("isCheckOut", PartUtil.class.getName(),
 						null, new Class[] { WTPart.class }, new Object[] { part });
 	        } else {
 	        	boolean flag = false;
@@ -802,10 +807,10 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * @return		if part is exist in windChill and is workingCopy,return true
 	 * 				else return false
 	 */
-	public static boolean isWorkingCopy(WTPart part) {
+	public static Boolean isWorkingCopy(WTPart part) {
 		try {
 			if (!RemoteMethodServer.ServerFlag) {
-				return (boolean)RemoteMethodServer.getDefault().invoke("isWorkingCopy", PartUtil.class.getName(), null,
+				return (Boolean)RemoteMethodServer.getDefault().invoke("isWorkingCopy", PartUtil.class.getName(), null,
 						new Class[] { WTPart.class }, new Object[] { part });
 	        } else {
 	        	boolean flag = false;
@@ -834,10 +839,10 @@ public class PartUtil implements RemoteAccess, Serializable {
 	 * @return		if part is exist in windChill and is workingCopy,return true
 	 * 				else return false
 	 */
-	public static boolean isModifiable(WTPart part) {
+	public static Boolean isModifiable(WTPart part) {
 		try {
 	        if (!RemoteMethodServer.ServerFlag) {
-	               return (boolean)RemoteMethodServer.getDefault().invoke("isModifiable", PartUtil.class.getName(), null, 
+	               return (Boolean)RemoteMethodServer.getDefault().invoke("isModifiable", PartUtil.class.getName(), null,
 	            		   new Class[] { WTPart.class }, new Object[] { part });
 	        } else {
 	        	boolean flag = false;
@@ -1063,10 +1068,10 @@ public class PartUtil implements RemoteAccess, Serializable {
      * 				else return false
      * @throws WTException
      */
-    public static boolean hasUsageLink(WTPart parentPart, WTPartMaster childMaster) {
+    public static Boolean hasUsageLink(WTPart parentPart, WTPartMaster childMaster) {
     	try {
         	if (!RemoteMethodServer.ServerFlag) {
-        		return (boolean)RemoteMethodServer.getDefault().invoke("hasUsageLink", PartUtil.class.getName(), null, 
+        		return (Boolean)RemoteMethodServer.getDefault().invoke("hasUsageLink", PartUtil.class.getName(), null,
         				new Class[] { WTPart.class, WTPartMaster.class }, new Object[] { parentPart, childMaster });
 	        } else {
 	        	boolean hasUsageLink = false;
@@ -1312,7 +1317,57 @@ public class PartUtil implements RemoteAccess, Serializable {
         return null;
     }
     
-	public static void test() throws RemoteException, InvocationTargetException, WTException{
+    
+    public static Boolean updateNumber(WTPart part,String newPartNumber) throws Exception
+    {
+    	Transaction transaction = null;
+		boolean updateSuccess = false;
+		String userName = "";
+		try {
+			if (!RemoteMethodServer.ServerFlag) {
+				return (Boolean) RemoteMethodServer.getDefault().invoke(
+						"updateNumber", PartUtil.class.getName(), null,
+						new Class[] { WTPart.class, String.class },
+						new Object[] { part, newPartNumber });
+			} else {
+
+				try {
+					userName = SessionHelper.manager.getPrincipal().getName();
+					SessionHelper.manager.setAuthenticatedPrincipal(userName);
+					transaction = new Transaction();
+					transaction.start();
+
+					/* get Part Master and set new number */
+					Identified identified = (Identified) part.getMaster();
+					WTPartMasterIdentity masteridentity = (WTPartMasterIdentity) identified
+							.getIdentificationObject();
+					masteridentity.setNumber(newPartNumber);
+					identified = IdentityHelper.service.changeIdentity(
+							identified, masteridentity);
+					SessionHelper.manager.setPrincipal(userName);
+					PersistenceServerHelper.manager.update(part.getMaster());
+					transaction.commit();
+					transaction = null;
+					updateSuccess = true; 
+				} finally {
+					if (transaction != null) {
+						transaction.rollback();
+					}
+					try {
+						SessionHelper.manager.setPrincipal(userName);
+					} catch (WTException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		}
+		return updateSuccess;
+    }
+	public static void test() throws Exception{
 //		System.out.println("/*********************isPartExist********************/");
 //		System.out.println("1-------------"+isPartExist("0000000041"));
 //		System.out.println("2-------------"+isPartExist("asd"));
@@ -1520,6 +1575,7 @@ public class PartUtil implements RemoteAccess, Serializable {
 //		System.out.println(hasUsageLink(getPartByNumber("GC000032"), getPartMasterByNumber("GC000027")));
 //		System.out.println(hasUsageLink(getPartByNumber("asd"), getPartMasterByNumber("asd")));
 //		System.out.println(hasUsageLink(null, null));
+		updateNumber(getPartByNumber("HQ1211Y001000"),"xiugaishodedongxi01");
 	}
 	
 	public static void main(String[] args) throws RemoteException, InvocationTargetException, WTException {

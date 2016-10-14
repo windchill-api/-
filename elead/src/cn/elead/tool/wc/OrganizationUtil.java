@@ -40,10 +40,10 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	 * 				else if name is empty or null,return false
 	 */
 	@SuppressWarnings("deprecation")
-	public static boolean isWTOrganizationExistByName(String name) {
+	public static Boolean isWTOrganizationExistByName(String name) {
 		try {
 			if (!RemoteMethodServer.ServerFlag) {
-				return (boolean) RemoteMethodServer.getDefault().invoke("isWTOrganizationExistByName", 
+				return (Boolean) RemoteMethodServer.getDefault().invoke("isWTOrganizationExistByName",
 						OrganizationUtil.class.getName(), null, new Class[] { String.class }, new Object[] { name });
 	        } else {
 	        	boolean flag = false;
@@ -75,16 +75,16 @@ public class OrganizationUtil implements RemoteAccess, Serializable {
 	
 	/**
 	 * judge whether organization is exist by organization
-	 * @param name
+	 * @param org
 	 * @return		if org is exist in windChill,return true
 	 * 				else if org is not exist inwindChill,return false
 	 * 				else if org is null,return false
 	 */
 	@SuppressWarnings("deprecation")
-	public static boolean isWTOrganizationExistByOrg(WTOrganization org) {
+	public static Boolean isWTOrganizationExistByOrg(WTOrganization org) {
 		try {
 			if (!RemoteMethodServer.ServerFlag) {
-				return (boolean) RemoteMethodServer.getDefault().invoke("isWTOrganizationExistByOrg", 
+				return (Boolean) RemoteMethodServer.getDefault().invoke("isWTOrganizationExistByOrg",
 						OrganizationUtil.class.getName(), null, new Class[] { WTOrganization.class },new Object[] { org });
 	        } else {
 	        	boolean flag = false;

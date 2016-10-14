@@ -30,7 +30,7 @@ public class LifeCycleUtil implements RemoteAccess, Serializable {
 	
 	/**
 	 * get object lifeCycle
-	 * @param part
+	 * @param object
 	 * @return		if object is exist in windChill,return state
 	 * 				else if object is not exist in windChill or object is null,return null
 	 */
@@ -68,7 +68,7 @@ public class LifeCycleUtil implements RemoteAccess, Serializable {
 	
 	/**
 	 * get part lifeCycleTemplate by part
-	 * @param part
+	 * @param object
 	 * @return		if part is exist in windChill,return lifeCycleTemplate
 	 * 				else if part is not exist in windChill or part is null,return null
 	 */
@@ -103,7 +103,7 @@ public class LifeCycleUtil implements RemoteAccess, Serializable {
 	
 	/**
 	 * get part lifeCycleTemplate by part
-	 * @param part
+	 * @param object
 	 * @return		if part is exist in windChill,return lifeCycleTemplate
 	 * 				else if part is not exist in windChill or part is null,return null
 	 */
@@ -138,7 +138,8 @@ public class LifeCycleUtil implements RemoteAccess, Serializable {
 	
 	/**
 	 * reSetLifeCycle
-	 * @param part
+	 * @param object
+	 *  * @param state
 	 * @return		if object is exist in windChill,reSet state
 	 * 				else if object is not exist in windChill, object is null,state is empty or state is null,there is nothing to do
 	 */

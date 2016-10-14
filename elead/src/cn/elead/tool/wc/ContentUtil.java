@@ -4,8 +4,10 @@ import java.beans.PropertyVetoException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.rmi.RemoteException;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import wt.content.ApplicationData;
@@ -20,20 +22,13 @@ import wt.epm.EPMDocument;
 import wt.fc.PersistenceHelper;
 import wt.fc.QueryResult;
 import wt.fc.WTObject;
-import wt.inf.container.WTContainer;
-import wt.inf.team.ContainerTeam;
 import wt.log4j.LogR;
 import wt.method.RemoteAccess;
 import wt.method.RemoteMethodServer;
-import wt.part.WTPart;
+import wt.session.SessionHelper;
 import wt.session.SessionServerHelper;
 import wt.util.WTException;
 import wt.util.WTPropertyVetoException;
-import wt.vc.sessioniteration.sessioniterationResource;
-import wt.workflow.externalize.wfExternalizeResource;
-
-import com.google.gwt.rpc.client.impl.RemoteException;
-import com.ptc.cipjava.booleandict;
 /**
  * 文档内容/附件的获取，添加，删除，以及部件的附件的获取删除，添加
  * @author zhangxj
@@ -60,21 +55,23 @@ public class ContentUtil implements RemoteAccess {
 				boolean isAccessEnforced = SessionServerHelper.manager.isAccessEnforced();
 				String name = "";
 				try {
-					if (obj instanceof WTDocument) {
-						WTDocument doc = (WTDocument) obj;
-						QueryResult qr = ContentHelper.service.getContentsByRole(doc, ContentRoleType.SECONDARY);
-						while (qr.hasMoreElements()) {
-							ApplicationData applicationdata = (ApplicationData) qr.nextElement();
-							String filename = applicationdata.getFileName();
-							name += filename;
-						}
-					} else if (obj instanceof EPMDocument) {
-						EPMDocument epm = (EPMDocument) obj;
-						QueryResult qr = ContentHelper.service.getContentsByRole(epm, ContentRoleType.SECONDARY);
-						while (qr.hasMoreElements()) {
-							ApplicationData applicationdata = (ApplicationData) qr.nextElement();
-							String filename = applicationdata.getFileName();
-							name += filename;
+					if(obj != null){
+						if (obj instanceof WTDocument) {
+							WTDocument doc = (WTDocument) obj;
+							QueryResult qr = ContentHelper.service.getContentsByRole(doc, ContentRoleType.SECONDARY);
+							while (qr.hasMoreElements()) {
+								ApplicationData applicationdata = (ApplicationData) qr.nextElement();
+								String filename = applicationdata.getFileName();
+								name += filename;
+							}
+						} else if (obj instanceof EPMDocument) {
+							EPMDocument epm = (EPMDocument) obj;
+							QueryResult qr = ContentHelper.service.getContentsByRole(epm, ContentRoleType.SECONDARY);
+							while (qr.hasMoreElements()) {
+								ApplicationData applicationdata = (ApplicationData) qr.nextElement();
+								String filename = applicationdata.getFileName();
+								name += filename;
+							}
 						}
 					}
 				} catch (WTException e) {
@@ -84,7 +81,7 @@ public class ContentUtil implements RemoteAccess {
 				}
 				return name;
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -110,20 +107,22 @@ public class ContentUtil implements RemoteAccess {
 				ApplicationData applicationdata = null;
 				ContentHolder contentHolder = null;
 				try {
-					if (obj instanceof WTDocument) {
-						WTDocument wtdocument = (WTDocument) obj;
-						contentHolder = ContentHelper.service.getContents((ContentHolder) wtdocument);
-					}else if (obj instanceof EPMDocument) {
-						EPMDocument epm = (EPMDocument) obj;
-						contentHolder = ContentHelper.service.getContents((ContentHolder) epm);
-					}
-					QueryResult qr = ContentHelper.service.getContentsByRole(contentHolder, ContentRoleType.SECONDARY);
-					while (qr.hasMoreElements()) {
-						ApplicationData appData = (ApplicationData) qr.nextElement();
-						String appDataName = appData.getFileName();
-						if (appDataName.indexOf(fileName) >= 0) {
-							applicationdata = appData;
-							break;
+					if(StringUtils.isEmpty(fileName) && obj != null){
+						if (obj instanceof WTDocument) {
+							WTDocument wtdocument = (WTDocument) obj;
+							contentHolder = ContentHelper.service.getContents((ContentHolder) wtdocument);
+						}else if (obj instanceof EPMDocument) {
+							EPMDocument epm = (EPMDocument) obj;
+							contentHolder = ContentHelper.service.getContents((ContentHolder) epm);
+						}
+						QueryResult qr = ContentHelper.service.getContentsByRole(contentHolder, ContentRoleType.SECONDARY);
+						while (qr.hasMoreElements()) {
+							ApplicationData appData = (ApplicationData) qr.nextElement();
+							String appDataName = appData.getFileName();
+							if (appDataName.indexOf(fileName) >= 0) {
+								applicationdata = appData;
+								break;
+							}
 						}
 					}
 				} catch (WTException e1) {
@@ -133,7 +132,7 @@ public class ContentUtil implements RemoteAccess {
 				}
 				return applicationdata;
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -159,13 +158,15 @@ public class ContentUtil implements RemoteAccess {
 				boolean enforce = wt.session.SessionServerHelper.manager.setAccessEnforced(false);
 				QueryResult qr;
 				try {
-					qr = ContentHelper.service.getContentsByRole(doc,ContentRoleType.PRIMARY);
-					while (qr.hasMoreElements()) {
-						ApplicationData appData = (ApplicationData) qr.nextElement();
-						if (appData != null) {
-							String fileName = appData.getFileName();
-							if (fileName.startsWith(preFix)) {
-								return appData;
+					if(doc != null && StringUtils.isEmpty(preFix)){
+						qr = ContentHelper.service.getContentsByRole(doc,ContentRoleType.PRIMARY);
+						while (qr.hasMoreElements()) {
+							ApplicationData appData = (ApplicationData) qr.nextElement();
+							if (appData != null) {
+								String fileName = appData.getFileName();
+								if (fileName.startsWith(preFix)) {
+									return appData;
+								}
 							}
 						}
 					}
@@ -175,7 +176,7 @@ public class ContentUtil implements RemoteAccess {
 					SessionServerHelper.manager.setAccessEnforced(enforce);
 				}
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -187,7 +188,7 @@ public class ContentUtil implements RemoteAccess {
 	 * deleteContents delete all contents about the doc include PrimaryContent
 	 * 
 	 * @author zhangxj
-	 * @param WTDocument
+	 * @param doc
 	 * @return WTDocument
 	 * @throws WTException
 	 * @throws PropertyVetoException
@@ -201,14 +202,15 @@ public class ContentUtil implements RemoteAccess {
 				boolean enforce = wt.session.SessionServerHelper.manager.setAccessEnforced(false);
 				FormatContentHolder holder = null;
 				try {
-					holder = (FormatContentHolder) ContentHelper.service.getContents(doc);
-					List<?> items = ContentHelper.getContentListAll(holder);
-					for (int i = 0; i < items.size(); i++) {
-						ContentItem item = (ContentItem) items.get(i);
-						ContentServerHelper.service.deleteContent(holder, item);
+					if(doc != null){
+						holder = (FormatContentHolder) ContentHelper.service.getContents(doc);
+						List<?> items = ContentHelper.getContentListAll(holder);
+						for (int i = 0; i < items.size(); i++) {
+							ContentItem item = (ContentItem) items.get(i);
+							ContentServerHelper.service.deleteContent(holder, item);
+						}
+						holder = (FormatContentHolder) PersistenceHelper.manager.refresh(holder);
 					}
-					holder = (FormatContentHolder) PersistenceHelper.manager.refresh(holder);
-					SessionServerHelper.manager.setAccessEnforced(enforce);
 				} catch (WTException e) {
 					logger.error(CLASSNAME+".deleteContents:"+e);
 				} finally {
@@ -216,7 +218,7 @@ public class ContentUtil implements RemoteAccess {
 				}
 				return (WTDocument) holder;
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -242,6 +244,8 @@ public class ContentUtil implements RemoteAccess {
 				boolean enforce = wt.session.SessionServerHelper.manager.setAccessEnforced(false);
 				ContentHolder ch = null;
 				try {
+					if(doc != null && StringUtils.isEmpty(filePath) && StringUtils.isEmpty(fileName)){
+					}
 					ApplicationData applicationdata = ApplicationData.newApplicationData(doc);
 					applicationdata.setFileName(fileName);
 					applicationdata.setUploadedFromPath(filePath);
@@ -263,7 +267,7 @@ public class ContentUtil implements RemoteAccess {
 				}
 				return (WTDocument) ch;
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -285,25 +289,27 @@ public class ContentUtil implements RemoteAccess {
 					RemoteMethodServer.getDefault().invoke("addAttachments",ContentUtil.class.getName(),null,
 							new Class[] { ContentHolder.class, String.class,String.class },new Object[] { holder, filePath, fileName });
 			} else {
-				boolean foronce = wt.session.SessionServerHelper.manager.setAccessEnforced(false);
-				QueryResult qr = ContentHelper.service.getContentsByRole(holder,
-						ContentRoleType.SECONDARY);
-				while (qr.hasMoreElements()) {
-					ApplicationData oAppData = (ApplicationData) qr.nextElement();
-					String strFileName = oAppData.getFileName();
-					if (strFileName != null && strFileName.trim().equalsIgnoreCase(fileName)) {
-						try {
-							ContentServerHelper.service.deleteContent(holder,oAppData);
-						} catch (WTPropertyVetoException e) {
-							logger.error(CLASSNAME+".addAttachments:"+e);
-						} finally {
-							SessionServerHelper.manager.setAccessEnforced(foronce);
+				boolean enforce = wt.session.SessionServerHelper.manager.setAccessEnforced(false);
+				try {
+					if(holder !=null  && StringUtils.isEmpty(filePath) && StringUtils.isEmpty(fileName)){
+						QueryResult qr = ContentHelper.service.getContentsByRole(holder,
+								ContentRoleType.SECONDARY);
+						while (qr.hasMoreElements()) {
+							ApplicationData oAppData = (ApplicationData) qr.nextElement();
+							String strFileName = oAppData.getFileName();
+							if (strFileName != null && strFileName.trim().equalsIgnoreCase(fileName)) {
+								ContentServerHelper.service.deleteContent(holder,oAppData);
+							}
 						}
+						addContent(holder, filePath, fileName, ContentRoleType.SECONDARY);
 					}
+				} catch (WTPropertyVetoException e) {
+					logger.error(CLASSNAME+".addAttachments:"+e);
+				}finally{
+					SessionServerHelper.manager.setAccessEnforced(enforce);
 				}
-				addContent(holder, filePath, fileName, ContentRoleType.SECONDARY);
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -327,11 +333,13 @@ public class ContentUtil implements RemoteAccess {
 				boolean enforce = wt.session.SessionServerHelper.manager.setAccessEnforced(false);
 				ApplicationData applicationData = ApplicationData.newApplicationData(holder);
 				try {
-					applicationData.setRole(contentType);
-					applicationData = (ApplicationData) PersistenceHelper.manager.save(applicationData);
-					applicationData = ContentServerHelper.service.updateContent(holder, applicationData, filePath);
-					applicationData.setFileName(fileName);
-					applicationData = (ApplicationData) PersistenceHelper.manager.modify(applicationData);
+					if(holder != null && StringUtils.isEmpty(filePath) && StringUtils.isEmpty(fileName) && contentType !=null){
+						applicationData.setRole(contentType);
+						applicationData = (ApplicationData) PersistenceHelper.manager.save(applicationData);
+						applicationData = ContentServerHelper.service.updateContent(holder, applicationData, filePath);
+						applicationData.setFileName(fileName);
+						applicationData = (ApplicationData) PersistenceHelper.manager.modify(applicationData);
+					}
 				} catch (WTPropertyVetoException e) {
 				logger.error(CLASSNAME+".addContent:"+e);
 				} catch (FileNotFoundException e) {
@@ -344,7 +352,7 @@ public class ContentUtil implements RemoteAccess {
 					SessionServerHelper.manager.setAccessEnforced(enforce);
 				}
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -390,7 +398,7 @@ public class ContentUtil implements RemoteAccess {
 					}
 					return holder;
 				}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);

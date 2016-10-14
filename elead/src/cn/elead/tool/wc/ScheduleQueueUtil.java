@@ -40,10 +40,10 @@ public class ScheduleQueueUtil implements RemoteAccess, Serializable {
      * @throws WTException
      */
     @SuppressWarnings("deprecation")
-	public static boolean isScheduleItemExistByQueueName(String scheduleQueueName) {
+	public static Boolean isScheduleItemExistByQueueName(String scheduleQueueName) {
     	try {
     		if (!RemoteMethodServer.ServerFlag) {
-    			return (boolean)RemoteMethodServer.getDefault().invoke("isScheduleItemExistByQueueName", ScheduleQueueUtil.class.getName(), null,
+    			return (Boolean)RemoteMethodServer.getDefault().invoke("isScheduleItemExistByQueueName", ScheduleQueueUtil.class.getName(), null,
     					new Class[] { String.class }, new Object[] { scheduleQueueName });
 	        } else {
 	        	boolean flag = false;
@@ -123,7 +123,7 @@ public class ScheduleQueueUtil implements RemoteAccess, Serializable {
      * @param targetClass
      * @param targetMethod
      * @param initialStartTime
-     * @param rescheduleIntervalInSeconds
+     * @param initialStartTime
      * @throws WTException
      */
 	public static ScheduleItem createScheduleQueue(String scheduleQueueName, String scheduleItemName, String scheduleItemDescription,

@@ -45,10 +45,10 @@ public class EnumUtil implements RemoteAccess {
 	 * 				else if name is not exist,name is empty or name is null,return false
 	 */
 	@SuppressWarnings("deprecation")
-	public static boolean isEnumerationExist(String name) {
+	public static Boolean isEnumerationExist(String name) {
 		try {
 	        if (!RemoteMethodServer.ServerFlag) {
-	            	return (boolean)RemoteMethodServer.getDefault().invoke("isEnumerationExist", EnumUtil.class.getName(), null,
+	            	return (Boolean)RemoteMethodServer.getDefault().invoke("isEnumerationExist", EnumUtil.class.getName(), null,
 	            			new Class[] { String.class }, new Object[] { name });
 	        } else {
 	        	boolean flag = false;
@@ -171,10 +171,10 @@ public class EnumUtil implements RemoteAccess {
 	 * 				else if name is not exist,name is empty or name is null,return false
 	 */
 	@SuppressWarnings("deprecation")
-	public static boolean isEnumHasItem(String name) {
+	public static Boolean isEnumHasItem(String name) {
 		try {
 	        if (!RemoteMethodServer.ServerFlag) {
-	            	return (boolean)RemoteMethodServer.getDefault().invoke("isEnumHasItem", EnumUtil.class.getName(), null,
+	            	return (Boolean)RemoteMethodServer.getDefault().invoke("isEnumHasItem", EnumUtil.class.getName(), null,
 	            			new Class[] { String.class }, new Object[] { name });
 	        } else {
 	        	boolean flag = false;

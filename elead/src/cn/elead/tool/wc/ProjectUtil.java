@@ -26,20 +26,25 @@ import wt.session.SessionServerHelper;
 import wt.util.WTException;
 import wt.util.WTPropertyVetoException;
 	
-	
+	/**
+	 * 
+	 * <一句话功能简述>
+	 * <功能详细描述>
+	 * 
+	 * @author  zhangxj
+	 * @version  [版本号, 2016年9月22日]
+	 * @see  [相关类/方法]
+	 * @since  [产品/模块版本]
+	 */
 	@SuppressWarnings("deprecation")
 	public class ProjectUtil implements RemoteAccess{
 		private static  String  CLASSNAME = ProjectUtil.class.getName();			
 		private  static Logger logger= LogR.getLogger(CLASSNAME);
-		/**
-		 * 判断项目是否存在
-		 * @param name
-		 * @return
-		 */
-		public static  boolean  isExistProject(String name ){
+	
+		public static  Boolean  isExistProject(String name ){
 			 try {
 				if (!RemoteMethodServer.ServerFlag) {
-				    	return (boolean)RemoteMethodServer.getDefault().invoke("isExistProject", ProjectUtil.class.getName(), null,
+				    	return (Boolean)RemoteMethodServer.getDefault().invoke("isExistProject", ProjectUtil.class.getName(), null,
 				    			new Class[] { String.class }, new Object[] { name });
 				} else{
 					boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
@@ -71,9 +76,11 @@ import wt.util.WTPropertyVetoException;
 		}
 		
 		/**
-		 * 通过名称获取项目
-		 * @param name
-		 * @return
+		 * 
+		 * <一句话功能简述>
+		 * <功能详细描述>
+		 * @author  zhangxj
+		 * @see [类、类#方法、类#成员]
 		 */
 		 public static Project2 getProjectByName(String name){
 			 try {
@@ -110,30 +117,48 @@ import wt.util.WTPropertyVetoException;
 			return null;
 		 }
 		 
+		 /**
+		  * 
+		  * <一句话功能简述>
+		  * <功能详细描述>
+		  * @param name
+		  * @param containerTemplateName
+		  * @param orgName
+		  * @param Desc
+		  * @param user
+		  * @see [类、类#方法、类#成员]
+		  */
 		 public static void createProject(String name, String containerTemplateName, String orgName, String Desc,WTPrincipal user){
-			     boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 			 try {
-				WTOrganization wtOrg = OrganizationUtil.getWTOrganization(orgName);
-					WTContainerRef orgContainerRef = WTContainerHelper.service.getOrgContainerRef(wtOrg);
-					WTContainerTemplateRef containerTemplateRef = ContainerTemplateHelper.service.getContainerTemplateRef(orgContainerRef,containerTemplateName, 
-							Project2.class);
-					Project2 project2= Project2.newProject2();
-					project2.setName(name);
-					project2.setDescription(Desc);	
-					project2.setContainerReference(orgContainerRef);
-					project2.setContainerTemplateReference(containerTemplateRef);
-					project2.setCreator(SessionHelper.manager.getPrincipal());
-					project2.setOwner(SessionHelper.manager.getPrincipal());
-					System.out.println("orgContainerRef>>"+orgContainerRef+"containerTemplateRef>>>"+containerTemplateRef+"SessionHelper.manager.getPrincipal()>"+SessionHelper.manager.getPrincipal());
-				WTContainerHelper.service.create(project2);
-			} catch (WTPropertyVetoException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (WTException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}finally{
-				SessionServerHelper.manager.setAccessEnforced(enforce);
+				if(!RemoteMethodServer.ServerFlag){
+					 RemoteMethodServer.getDefault().invoke("isExistProject", ProjectUtil.class.getName(), null, new Class[] {String.class,String.class,String.class,String.class,WTPrincipal.class},
+							 new Object []{name,containerTemplateName,orgName,Desc,user});
+				 }
+				     boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+				 try {
+					WTOrganization wtOrg = OrganizationUtil.getWTOrganization(orgName);
+						WTContainerRef orgContainerRef = WTContainerHelper.service.getOrgContainerRef(wtOrg);
+						WTContainerTemplateRef containerTemplateRef = ContainerTemplateHelper.service.getContainerTemplateRef(orgContainerRef,containerTemplateName, 
+								Project2.class);
+						Project2 project2= Project2.newProject2();
+						project2.setName(name);
+						project2.setDescription(Desc);	
+						project2.setContainerReference(orgContainerRef);
+						project2.setContainerTemplateReference(containerTemplateRef);
+						project2.setCreator(SessionHelper.manager.getPrincipal());
+						project2.setOwner(SessionHelper.manager.getPrincipal());
+						WTContainerHelper.service.create(project2);
+				} catch (WTPropertyVetoException e) {
+					logger.error(CLASSNAME+".createProject:"+e);
+				} catch (WTException e) {
+					logger.error(CLASSNAME+".createProject:"+e);
+				}finally{
+					SessionServerHelper.manager.setAccessEnforced(enforce);
+				}
+			} catch (RemoteException e) {
+				logger.error(e.getMessage(),e);
+			} catch (InvocationTargetException e) {
+				logger.error(e.getMessage(),e);
 			}
 		 }
 		 

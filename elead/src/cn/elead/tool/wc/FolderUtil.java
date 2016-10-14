@@ -34,8 +34,8 @@ public class FolderUtil implements RemoteAccess, Serializable {
     /**
      * get folder by containerRef and folderPath
      * 
-     * @param WTContainerRef
-     * @param String
+     * @param containerRef
+     * @param path
      *            folder
      * @return 		if containerRef and path is exist in windChill,return folder
      * 				else if path is not exist in windChill , path is empty or null,return null
@@ -168,7 +168,7 @@ public class FolderUtil implements RemoteAccess, Serializable {
 	
 	/**
 	 * create folder by containerRef and folderPath
-	 * @param container
+	 * @param containerRef
 	 * @param path
 	 * @return		if containerRef is exist in windChill,path is not exist,create folder and return this folder
 	 * 				else if containerRef and path are exist or containerRef is not exist in windChill,there is nothing to do,return null
@@ -217,7 +217,7 @@ public class FolderUtil implements RemoteAccess, Serializable {
 	
 	/**
 	 * create folder by part and folderPath
-	 * @param container
+	 * @param part
 	 * @param path
 	 * @return		if part is exist in windChill,path is not exist,create folder and return this folder
 	 * 				else if part and path are exist or part is not exist in windChill,there is nothing to do,return null

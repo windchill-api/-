@@ -1,21 +1,17 @@
 package cn.elead.tool.wc;
 
 import java.lang.reflect.InvocationTargetException;
-import java.text.MessageFormat;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import wt.doc.WTDocument;
-import wt.doc.WTDocumentHelper;
-import wt.doc.WTDocumentMaster;
 import wt.epm.EPMDocument;
 import wt.epm.EPMDocumentHelper;
 import wt.epm.EPMDocumentMaster;
 import wt.epm.structure.EPMReferenceLink;
-import wt.fc.IdentityHelper;
 import wt.fc.ObjectNoLongerExistsException;
 import wt.fc.PersistenceHelper;
 import wt.fc.PersistenceServerHelper;
@@ -34,14 +30,9 @@ import wt.lifecycle.State;
 import wt.log4j.LogR;
 import wt.method.RemoteAccess;
 import wt.method.RemoteMethodServer;
-import wt.org.WTOrganization;
 import wt.part.PartDocHelper;
 import wt.part.WTPart;
-import wt.part.WTPartHelper;
-import wt.part.WTPartMaster;
 import wt.pds.StatementSpec;
-import wt.query.ClassAttribute;
-import wt.query.OrderBy;
 import wt.query.QuerySpec;
 import wt.query.SearchCondition;
 import wt.query.WhereExpression;
@@ -54,15 +45,10 @@ import wt.util.WTRuntimeException;
 import wt.vc.Iterated;
 import wt.vc.VersionControlHelper;
 import wt.vc.config.LatestConfigSpec;
-import wt.vc.sessioniteration.sessioniterationResource;
 import wt.vc.struct.IteratedDescribeLink;
 import wt.vc.wip.CheckoutLink;
 import wt.vc.wip.WorkInProgressHelper;
 import wt.vc.wip.Workable;
-import wt.workflow.externalize.wfExternalizeResource;
-
-import com.google.gwt.rpc.client.impl.RemoteException;
-import com.ptc.cipjava.booleandict;
 /**
  * EPM 文档的增删 改查 相关操作
  * @author zhangxj
@@ -74,20 +60,42 @@ public class EPMUtil implements RemoteAccess {
 	private final static String CLASSNAME = EPMUtil.class.getName();
 	private static Logger logger = LogR.getLogger(CLASSNAME);
 	
+	/**
+	 * 
+	 * 
+	 * 判断EPM文档是否存在
+	 * <功能详细描述>
+	 * @author  zhangxj
+	 * @see [类、类#方法、类#成员]
+	 */
 	public static boolean isEPMDocExist(String strNumber) {
-		EPMDocument EPMDoc = null;
-		if (!StringUtils.isEmpty(strNumber)) {
-			try {
-				EPMDoc = getEPMDocByNumber(strNumber);
-			} catch (WTException e) {
-				logger.error(">>>>>" + e);
+		try {
+			if(RemoteMethodServer.ServerFlag){
+			 RemoteMethodServer.getDefault().invoke("isEPMDocExist", EPMUtil.class.getName(), null, new Class []{String.class}, new Object []{strNumber});
+			}else {
+				boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+				try {
+					EPMDocument EPMDoc = null;
+					if (!StringUtils.isEmpty(strNumber)) {
+						EPMDoc = getEPMDocByNumber(strNumber);
+					}
+					if (EPMDoc == null) {
+						return false;
+					} else {
+						return true;
+					}
+				} catch (Exception e) {
+					logger.error(CLASSNAME+".isEPMDocExist:"+e);
+				}finally{
+					SessionServerHelper.manager.setAccessEnforced(enforce);
+				}
 			}
-		}
-		if (EPMDoc == null) {
-			return false;
-		} else {
-			return true;
-		}
+			} catch (RemoteException e) {
+				logger.error(e.getMessage(),e);
+			} catch (InvocationTargetException e) {
+				logger.error(e.getMessage(),e);
+			}
+		return false;
 	}
 
 	/**
@@ -131,7 +139,7 @@ public class EPMUtil implements RemoteAccess {
 				}
 				return epmDocs;
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -154,7 +162,7 @@ public class EPMUtil implements RemoteAccess {
 				boolean isAccessEnforced = SessionServerHelper.manager.isAccessEnforced();
 				String EPMDocType = null;
 				try {
-					if (EPMDoc != null && isEPMDocExist(EPMDoc.getNumber())) {
+					if (EPMDoc != null ) {
 						EPMDocType = TypedUtilityServiceHelper.service.getExternalTypeIdentifier(EPMDocType).toString();
 					}
 				} catch (java.rmi.RemoteException e) {
@@ -189,28 +197,29 @@ public class EPMUtil implements RemoteAccess {
 			} else {
 				boolean accessFlag = SessionServerHelper.manager.isAccessEnforced();
 				try {
-					String oldFolder = epm.getLocation();
-					String oldContext = epm.getContainerName();
-					String folder = folder1;
-					WTContainer wtcontainer =WCUtil.getWTContainerByName(oldContext);
-					WTContainerRef wtcRef = WTContainerRef.newWTContainerRef(wtcontainer);
-					logger.debug("图纸:" + epm.getNumber() + "原有的存储路径为...."+ oldFolder);
-					if (!oldFolder.equals(folder)) {
-						Folder newfolder = null;
-						newfolder = FolderHelper.service.getFolder(folder,wtcRef);
-						epm = (EPMDocument) FolderHelper.service.changeFolder((FolderEntry) epm, newfolder);
-						PersistenceHelper.manager.refresh(epm);
+					if(epm != null && folder1 !=null){
+						String oldFolder = epm.getLocation();
+						String oldContext = epm.getContainerName();
+						String folder = folder1;
+						WTContainer wtcontainer =WCUtil.getWtContainerByName(oldContext);
+						WTContainerRef wtcRef = WTContainerRef.newWTContainerRef(wtcontainer);
+						if (!oldFolder.equals(folder)) {
+							Folder newfolder = null;
+							newfolder = FolderHelper.service.getFolder(folder,wtcRef);
+							epm = (EPMDocument) FolderHelper.service.changeFolder((FolderEntry) epm, newfolder);
+							PersistenceHelper.manager.refresh(epm);
+						}
 					}
 				} catch (ObjectNoLongerExistsException e) {
 					logger.error(CLASSNAME+".changeLocation:"+e);
 				} catch (WTException e) {
-					// TODO Auto-generated catch block
+					logger.error(CLASSNAME+".changeLocation:"+e);
 					e.printStackTrace();
 				} finally {
 					SessionServerHelper.manager.setAccessEnforced(accessFlag);
 				}
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -248,7 +257,7 @@ public class EPMUtil implements RemoteAccess {
 				}
 				return EPMDoc;
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -265,8 +274,7 @@ public class EPMUtil implements RemoteAccess {
 	 * @throws WTException
 	 */
 	@SuppressWarnings("unchecked")
-	public static List<EPMDocument> geEPMDocumentByName(String EPMDocName)
-			throws WTException {
+	public static List<EPMDocument> geEPMDocumentByName(String EPMDocName)throws WTException {
 		try {
 			List<EPMDocument> EPMList = new ArrayList<EPMDocument>();
 			if (!RemoteMethodServer.ServerFlag) {
@@ -294,7 +302,7 @@ public class EPMUtil implements RemoteAccess {
 				}
 				return EPMList;
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -338,7 +346,7 @@ public class EPMUtil implements RemoteAccess {
 				}
 				return EPMDoc;
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -384,7 +392,7 @@ public class EPMUtil implements RemoteAccess {
 					SessionServerHelper.manager.setAccessEnforced(isAccessEnforced);
 				}
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -415,7 +423,7 @@ public class EPMUtil implements RemoteAccess {
 				}
 				return number;
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -446,7 +454,7 @@ public class EPMUtil implements RemoteAccess {
 				}
 				return name;
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -457,11 +465,11 @@ public class EPMUtil implements RemoteAccess {
 	/**
 	 * getPartMasterByNumber
 	 * @author zhangxj
-	 * @param partNo
+	 * @param EPMDocName
 	 * @return epmDocumentMaster
 	 * @throws WTException
 	 */
-	public static EPMDocumentMaster getPartMasterByNumber(String EPMDocName)throws WTException {
+	public static EPMDocumentMaster getEPMMasterByNumber(String EPMDocName)throws WTException {
 		try {
 			if (!RemoteMethodServer.ServerFlag) {
 					return (EPMDocumentMaster) RemoteMethodServer.getDefault().invoke("getPartMasterByNumber",EPMUtil.class.getName(), null,
@@ -470,12 +478,14 @@ public class EPMUtil implements RemoteAccess {
 				boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 				EPMDocumentMaster epmDocumentMaster = null;
 				try {
-					QuerySpec querySpec = new QuerySpec(EPMDocumentMaster.class);
-					WhereExpression searchCondition = new SearchCondition(EPMDocumentMaster.class, EPMDocumentMaster.
-						NUMBER,SearchCondition.EQUAL, EPMDocName, false);
-					querySpec.appendWhere(searchCondition, new int[] { 0 });
-					QueryResult queryResult = PersistenceHelper.manager.find((StatementSpec) querySpec);
-					while (queryResult.hasMoreElements()) {epmDocumentMaster = (EPMDocumentMaster) queryResult.nextElement();
+					if(StringUtils.isEmpty(EPMDocName)){
+							QuerySpec querySpec = new QuerySpec(EPMDocumentMaster.class);
+							WhereExpression searchCondition = new SearchCondition(EPMDocumentMaster.class, EPMDocumentMaster.
+									NUMBER,SearchCondition.EQUAL, EPMDocName, false);
+							querySpec.appendWhere(searchCondition, new int[] { 0 });
+							QueryResult queryResult = PersistenceHelper.manager.find((StatementSpec) querySpec);
+							while (queryResult.hasMoreElements()) {epmDocumentMaster = (EPMDocumentMaster) queryResult.nextElement();
+							}
 					}
 				} catch (WTException e) {
 					logger.error(CLASSNAME+".getPartMasterByNumber:"+e);
@@ -484,13 +494,50 @@ public class EPMUtil implements RemoteAccess {
 				}
 				return epmDocumentMaster;
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
 		}
 		return null;
 	}
+
+	/**
+	 * getLatestEPMByMaster
+	 * @author zhangxj
+	 * @param epmDocumentMaster
+	 * @return latestEPMDoc
+	 * @throws WTException
+	 */
+//	public static EPMDocument getLatestEPMByMaster(EPMDocumentMaster epmDocumentMaster) throws WTException {
+//		try {
+//			if (!RemoteMethodServer.ServerFlag) {
+//					return (EPMDocument) RemoteMethodServer.getDefault().invoke("getLatestPartByMaster", EPMUtil.class.getName(), null,
+//							new Class[] { EPMDocumentMaster.class },new Object[] { epmDocumentMaster });
+//			} else {
+//				boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+//				EPMDocument latestEPMDoc = null;
+//				try {
+//					if (epmDocumentMaster != null) {
+//						QueryResult qr = VersionControlHelper.service.allIterationsOf(epmDocumentMaster);
+//						if (qr.hasMoreElements()) {
+//							latestEPMDoc = (EPMDocument) qr.nextElement();
+//						}
+//					}
+//				} catch (WTException e) {
+//					logger.error(CLASSNAME+".getLatestEPMByMaster:"+e);
+//				} finally {
+//					SessionServerHelper.manager.setAccessEnforced(enforce);
+//				}
+//				return latestEPMDoc;
+//			}
+//		} catch (RemoteException e) {
+//			logger.error(e.getMessage(),e);
+//		} catch (InvocationTargetException e) {
+//			logger.error(e.getMessage(),e);
+//		}
+//		return null;
+//	}
 
 	/**
 	 * getLatestEPMByMaster
@@ -508,7 +555,7 @@ public class EPMUtil implements RemoteAccess {
 				boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
 				EPMDocument latestEPMDoc = null;
 				try {
-					if (epmDocumentMaster != null&& !"".equals(epmDocumentMaster.getNumber())) {
+					if (epmDocumentMaster != null) {
 						QueryResult qr = VersionControlHelper.service.allIterationsOf(epmDocumentMaster);
 						if (qr.hasMoreElements()) {
 							latestEPMDoc = (EPMDocument) qr.nextElement();
@@ -521,7 +568,7 @@ public class EPMUtil implements RemoteAccess {
 				}
 				return latestEPMDoc;
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -529,36 +576,7 @@ public class EPMUtil implements RemoteAccess {
 		return null;
 	}
 
-	/**
-	 * getLifeCycleState by EPM
-	 * @author zhangxj
-	 * @param EPM
-	 * @return state
-	 */
-	public static wt.lifecycle.State getLifeCycleState(EPMDocument epm) {
-		try {
-			if (!RemoteMethodServer.ServerFlag) {
-					return (wt.lifecycle.State) RemoteMethodServer.getDefault().invoke("getLifeCycleState", EPMUtil.class.getName(),null, new Class[] { EPMDocument.class },
-							new Object[] { epm });
-			} else {
-				boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-				wt.lifecycle.State state = null;
-				try {
-					if (epm != null && !"".equals(epm.getNumber())) {
-						state = epm.getLifeCycleState();
-					}
-				} finally {
-					SessionServerHelper.manager.setAccessEnforced(enforce);
-				}
-				return state;
-			}
-		} catch (java.rmi.RemoteException e) {
-			logger.error(e.getMessage(),e);
-		} catch (InvocationTargetException e) {
-			logger.error(e.getMessage(),e);
-		}
-		return null;
-	}
+
 
 	/**
 	 * getBigVersionByEPM
@@ -575,15 +593,15 @@ public class EPMUtil implements RemoteAccess {
 						boolean enforce = SessionServerHelper.manager	.setAccessEnforced(false);
 						String wt = null;
 						try {
-								if (epm != null && !"".equals(epm.getNumber())) {
+								if (epm != null ) {
 									wt = epm.getVersionIdentifier().getValue();
 								}
-								return wt;
 							} finally {
 								SessionServerHelper.manager.setAccessEnforced(enforce);
 							}
+						return wt;
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -598,11 +616,11 @@ public class EPMUtil implements RemoteAccess {
 	public static boolean ischeckOut(EPMDocument  epmDocument){
 		try {
 			if (!RemoteMethodServer.ServerFlag) {
-				return (boolean) RemoteMethodServer.getDefault().invoke("ischeckOut", EPMUtil.class.getName(), null,new Class[] { EPMDocument.class }, 
+				 RemoteMethodServer.getDefault().invoke("ischeckOut", EPMUtil.class.getName(), null,new Class[] { EPMDocument.class },
 						new Object[] { epmDocument });
 			}else{
 				boolean falg=false;
-				boolean enforce=wt.session.SessionServerHelper.manager.setAccessEnforced(false);
+				boolean enforce=SessionServerHelper.manager.setAccessEnforced(false);
 				try {
 					if(epmDocument != null){
 						falg= WorkInProgressHelper.isCheckedOut(epmDocument);
@@ -614,7 +632,7 @@ public class EPMUtil implements RemoteAccess {
 				}
 				return falg;
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
@@ -627,35 +645,35 @@ public class EPMUtil implements RemoteAccess {
 	 * @param epmDocument
 	 */
 	public static void doCheckIn(EPMDocument epmDocument){
-	        try {
-				if (!RemoteMethodServer.ServerFlag) {
-				       RemoteMethodServer.getDefault().invoke("doCheckIn", EPMUtil.class.getName(), null, new Class[] { EPMDocument.class},
-				        		new Object[] { epmDocument});
-				} else {
-					boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-					try{
-						if(epmDocument!=null){
-							Workable workable = null;
-							if(!WorkInProgressHelper.isWorkingCopy(epmDocument)){
-								workable = doCheckOut(epmDocument);//从检出方法中得到已检出工作副本
-							}else{
-								workable = epmDocument;
-							}
-								workable = WorkInProgressHelper.service.checkin(workable, "AutoCheckIn");
+        try {
+			if (!RemoteMethodServer.ServerFlag) {
+			       RemoteMethodServer.getDefault().invoke("doCheckIn", EPMUtil.class.getName(), null, new Class[] { EPMDocument.class},
+			        		new Object[] { epmDocument});
+			} else {
+				boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+				try{
+					if(epmDocument!=null){
+						Workable workable = null;
+						if(!WorkInProgressHelper.isWorkingCopy(epmDocument)){
+							workable = doCheckOut(epmDocument);//从检出方法中得到已检出工作副本
+						}else{
+							workable = epmDocument;
 						}
-					} catch(WTPropertyVetoException e){
-						logger.error(">>>>>"+e);
-					} catch(WTException e){
-						logger.error(">>>>>"+e);
-					}finally {
-				        SessionServerHelper.manager.setAccessEnforced(enforce);
-				    }
-				}
-			} catch (java.rmi.RemoteException e) {
-			    logger.error(e.getMessage(),e);
-			} catch (InvocationTargetException e) {
-			    logger.error(e.getMessage(),e);
+							workable = WorkInProgressHelper.service.checkin(workable, "AutoCheckIn");
+					}
+				} catch(WTPropertyVetoException e){
+					logger.error(">>>>>"+e);
+				} catch(WTException e){
+					logger.error(">>>>>"+e);
+				}finally {
+			        SessionServerHelper.manager.setAccessEnforced(enforce);
+			    }
 			}
+		} catch (RemoteException e) {
+		    logger.error(e.getMessage(),e);
+		} catch (InvocationTargetException e) {
+		    logger.error(e.getMessage(),e);
+		}
 	}
 		
 	/**
@@ -664,47 +682,46 @@ public class EPMUtil implements RemoteAccess {
 	 * @return
 	 */
 	public static Workable doCheckOut(Workable epmDocumen){
-	        try {
-				if (!RemoteMethodServer.ServerFlag) {
-				       return (Workable)RemoteMethodServer.getDefault().invoke("doCheckOut", EPMUtil.class.getName(), null, new Class[] { EPMDocument.class},
-				        		new Object[] { epmDocumen});
-				} else {
-					Workable workable = null;
-					boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-					try{
-						if(epmDocumen!=null){
-							if(epmDocumen instanceof Iterated){
-								Iterated it = (Iterated) epmDocumen;
-								epmDocumen=(EPMDocument) VersionControlHelper.service.getLatestIteration(it, false);
-								Boolean checkOutFlag=WorkInProgressHelper.isCheckedOut(epmDocumen);
-								if(checkOutFlag){ 
-									if(!WorkInProgressHelper.isWorkingCopy(epmDocumen)){
-								         workable=WorkInProgressHelper.service.workingCopyOf(epmDocumen);
-									}else{
-										workable = epmDocumen;
-									}
+        try {
+			if (!RemoteMethodServer.ServerFlag) {
+			       return (Workable)RemoteMethodServer.getDefault().invoke("doCheckOut", EPMUtil.class.getName(), null, new Class[] { EPMDocument.class},
+			        		new Object[] { epmDocumen});
+			} else {
+				Workable workable = null;
+				boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+				try{
+					if(epmDocumen!=null){
+						if(epmDocumen instanceof Iterated){
+							Iterated it = (Iterated) epmDocumen;
+							epmDocumen=(EPMDocument) VersionControlHelper.service.getLatestIteration(it, false);
+							Boolean checkOutFlag=WorkInProgressHelper.isCheckedOut(epmDocumen);
+							if(checkOutFlag){ 
+								if(!WorkInProgressHelper.isWorkingCopy(epmDocumen)){
+							         workable=WorkInProgressHelper.service.workingCopyOf(epmDocumen);
 								}else{
-									Folder myFolder= WorkInProgressHelper.service.getCheckoutFolder();
-									CheckoutLink link = WorkInProgressHelper.service.checkout(epmDocumen, myFolder, "AutoCheckOut");
-									workable = link.getWorkingCopy();
+									workable = epmDocumen;
 								}
-							}	
-						}
-					} catch(WTPropertyVetoException e){
-						logger.error(CLASSNAME+".doCheckOut:"+e);
-					} catch(WTException e){
-						logger.error(CLASSNAME+".doCheckOut:"+e);
-					} finally {
-				        SessionServerHelper.manager.setAccessEnforced(enforce);
-				    }
-					return workable;
-				}
-			} catch (java.rmi.RemoteException e) {
-			    logger.error(e.getMessage(),e);
-			} catch (InvocationTargetException e) {
-			    logger.error(e.getMessage(),e);
+							}else{
+								Folder myFolder= WorkInProgressHelper.service.getCheckoutFolder();
+								CheckoutLink link = WorkInProgressHelper.service.checkout(epmDocumen, myFolder, "AutoCheckOut");
+								workable = link.getWorkingCopy();
+							}
+						}	
+					}
+				} catch(WTPropertyVetoException e){
+					logger.error(CLASSNAME+".doCheckOut:"+e);
+				} catch(WTException e){
+					logger.error(CLASSNAME+".doCheckOut:"+e);
+				} finally {
+			        SessionServerHelper.manager.setAccessEnforced(enforce);
+			    }
+				return workable;
 			}
-		
+		} catch (RemoteException e) {
+		    logger.error(e.getMessage(),e);
+		} catch (InvocationTargetException e) {
+		    logger.error(e.getMessage(),e);
+		}
 		return null;
 	}
 	/**
@@ -712,66 +729,72 @@ public class EPMUtil implements RemoteAccess {
 	 * @param epmDocumen
 	 */
 	public static void doCheckIn(Workable epmDocumen){
-	        try {
-				if (!RemoteMethodServer.ServerFlag) {
-				       RemoteMethodServer.getDefault().invoke("doCheckIn", 
-				        		EPMUtil.class.getName(), null, new Class[] { Workable.class},
-				        		new Object[] { epmDocumen});
-				} else {
-					boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-					try{
-						if(epmDocumen!=null){
-							Workable workable = null;
-							if(!WorkInProgressHelper.isWorkingCopy(epmDocumen)){
-								workable = doCheckOut(epmDocumen);//从检出方法中得到已检出工作副本
-							}else{
-								workable = epmDocumen;
-							}
-								workable = WorkInProgressHelper.service.checkin(workable, "AutoCheckIn");
+        try {
+			if (!RemoteMethodServer.ServerFlag) {
+			       RemoteMethodServer.getDefault().invoke("doCheckIn", EPMUtil.class.getName(), null, new Class[] { Workable.class},
+			        		new Object[] { epmDocumen});
+			} else {
+				boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+				try{
+					if(epmDocumen!=null){
+						Workable workable = null;
+						if(!WorkInProgressHelper.isWorkingCopy(epmDocumen)){
+							workable = doCheckOut(epmDocumen);//从检出方法中得到已检出工作副本
+						}else{
+							workable = epmDocumen;
 						}
-					} catch(WTPropertyVetoException e){
-						logger.error(CLASSNAME+".doCheckIn："+e);
-					} catch(WTException e){
-						logger.error(CLASSNAME+".doCheckIn："+e);
-					}finally {
-				        SessionServerHelper.manager.setAccessEnforced(enforce);
-				    }
-				}
-			} catch (java.rmi.RemoteException e) {
-				logger.error(e.getMessage(),e);
-			} catch (InvocationTargetException e) {
-				logger.error(e.getMessage(),e);
+							workable = WorkInProgressHelper.service.checkin(workable, "AutoCheckIn");
+					}
+				} catch(WTPropertyVetoException e){
+					logger.error(CLASSNAME+".doCheckIn："+e);
+				} catch(WTException e){
+					logger.error(CLASSNAME+".doCheckIn："+e);
+				}finally {
+			        SessionServerHelper.manager.setAccessEnforced(enforce);
+			    }
 			}
+		} catch (RemoteException e) {
+			logger.error(e.getMessage(),e);
+		} catch (InvocationTargetException e) {
+			logger.error(e.getMessage(),e);
+		}
 	}
 
-	
+	/**
+	 * 
+	 * 更新EPM文档
+	 * <功能详细描述>
+	 * @author  zhangxj
+	 * @see [类、类#方法、类#成员]
+	 */
 	@SuppressWarnings("deprecation")
 	public static void updateEPMDocument(EPMDocument epmDocument,String newNumber,String newName) throws WTPropertyVetoException{
-	        try {
-				if (!RemoteMethodServer.ServerFlag) {
-				        RemoteMethodServer.getDefault().invoke("updateEPMDocument", EPMUtil.class.getName(), null, new Class[] { EPMDocument.class,String.class,String.class},
-				        		new Object[] { epmDocument,newNumber,newName});
-				} else {
-					boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
-					try {
-						if(epmDocument==null){
-							return;
-						}
-					EPMDocumentMaster epmDocumentMaster = (EPMDocumentMaster) epmDocument.getMaster();
-						if(!StringUtil.isEmpty(newName)){
-							epmDocumentMaster= EPMDocumentHelper.service.changeCADName(epmDocumentMaster, newName);
-						}
-					} catch (WTException e) {
-						logger.error(CLASSNAME+".updateEPMDocument:"+e);
-					} finally {
-				        SessionServerHelper.manager.setAccessEnforced(enforce);
-				    }
-				}
-			} catch (java.rmi.RemoteException e) {
-				logger.error(e.getMessage(),e);
-			} catch (InvocationTargetException e) {
-				logger.error(e.getMessage(),e);
+	    try {
+			if (!RemoteMethodServer.ServerFlag) {
+			        RemoteMethodServer.getDefault().invoke("updateEPMDocument", EPMUtil.class.getName(), null, new Class[] { EPMDocument.class,String.class,String.class},
+			        		new Object[] { epmDocument,newNumber,newName});
+			} else {
+				boolean enforce = SessionServerHelper.manager.setAccessEnforced(false);
+				try {
+					if(epmDocument==null){
+						return;
+					}
+				EPMDocumentMaster epmDocumentMaster = (EPMDocumentMaster) epmDocument.getMaster();
+					if(!StringUtil.isEmpty(newName)){
+						epmDocumentMaster= EPMDocumentHelper.service.changeCADName(epmDocumentMaster, newName);
+						//这个缺少更新编号， 需要补充
+					}
+				} catch (WTException e) {
+					logger.error(CLASSNAME+".updateEPMDocument:"+e);
+				} finally {
+			        SessionServerHelper.manager.setAccessEnforced(enforce);
+			    }
 			}
+		} catch (RemoteException e) {
+			logger.error(e.getMessage(),e);
+		} catch (InvocationTargetException e) {
+			logger.error(e.getMessage(),e);
+		}
 	}
 	
 	/**
@@ -786,7 +809,7 @@ public class EPMUtil implements RemoteAccess {
 			    		new Object[] { epmDocument,state});
 			}else{
 				try {
-					if(epmDocument!=null ){
+					if(epmDocument != null && !StringUtils.isEmpty(state)){
 						epmDocument = (EPMDocument) LifeCycleHelper.service.setLifeCycleState((LifeCycleManaged) epmDocument,State.toState(state));
 						PersistenceHelper.manager.refresh(epmDocument);
 					}
@@ -800,32 +823,17 @@ public class EPMUtil implements RemoteAccess {
 					logger.error(CLASSNAME+".SetLifeCycle:"+e);
 				}
 			}
-		} catch (java.rmi.RemoteException e) {
+		} catch (RemoteException e) {
 			logger.error(e.getMessage(),e);
 		} catch (InvocationTargetException e) {
 			logger.error(e.getMessage(),e);
 		}
-		
 	}
-	public static void main(String[] args) {
-		try {
+	public static void main(String[] args) throws RemoteException, InvocationTargetException {
 			RemoteMethodServer server = RemoteMethodServer.getDefault();
 			server.setUserName("wcadmin");
 			server.setPassword("wcadmin");
-			try {
-				// server.invoke("setPartTenclosure",
-				// Test.class.getName(), null, new Class[]
-				// {String.class},
-				// new Object[] {args[0]});
-				server.invoke("test", EPMUtil.class.getName(), null,new Class[] {}, new Object[] {});
-			} catch (java.rmi.RemoteException e) {
-				e.printStackTrace();
-			}
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		}
+			server.invoke("test", EPMUtil.class.getName(), null,new Class[] {}, new Object[] {});
 	}
 	
 	public static void test() throws WTException, WTPropertyVetoException {
@@ -840,21 +848,21 @@ public class EPMUtil implements RemoteAccess {
 		// System.out.println(EPMDoc);
 		// System.out.println("^^^^^"+getTypeByEPMDoc(EPMDoc));
 		// getCADDocumentsByPart(PartUtil.getPartByNumber("ceshisdfsdf"));
-		 EPMDocument epmDocument= getEPMDocByNumber("0000000021");
+//		 EPMDocument epmDocument= getEPMDocByNumber("0000000021");
 		// System.out.println(epmDocument.getNumber());
 		// System.out.println(epmDocument.getName());
 		// System.out.println(epmDocument.getType());
 		// System.out.println("getEPMNumber>>>"+getEPMNumber(epmDocument));
 		// System.out.println("getPartMasterByNumber>>>>"+getPartMasterByNumber("CAD测试01"));
 		// System.out.println("getBigVersionByEPM>>>"+getBigVersionByEPM(epmDocument));
-		System.out.println("getLifeCycleState>>>>"+getLifeCycleState(epmDocument));
-		// doCheckOut(epmDocument);
-		 //ischeckOut(epmDocument);
-		// doCheckIn(epmDocument);
-		System.out.println(epmDocument.getName()+"&&&&&&&&&&"+epmDocument.getNumber());
-		SetLifeCycle(epmDocument,"INWORK");
-		System.out.println("getLifeCycleState>>>>"+getLifeCycleState(epmDocument));
-		updateEPMDocument(epmDocument,"xiaojie.dwg","teshi");
+//		System.out.println("getLifeCycleState>>>>"+getLifeCycleState(epmDocument));
+//		// doCheckOut(epmDocument);
+//		 //ischeckOut(epmDocument);
+//		// doCheckIn(epmDocument);
+//		System.out.println(epmDocument.getName()+"&&&&&&&&&&"+epmDocument.getNumber());
+//		SetLifeCycle(epmDocument,"INWORK");
+//		System.out.println("getLifeCycleState>>>>"+getLifeCycleState(epmDocument));
+//		updateEPMDocument(epmDocument,"xiaojie.dwg","teshi");
 		
 	}
 }

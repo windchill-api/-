@@ -34,10 +34,10 @@ public class LibraryUtil implements RemoteAccess, Serializable {
 	 * 				else if name is not exist,name is empty or name is null,return false
 	 */
 	@SuppressWarnings("deprecation")
-	public static boolean isLibraryExist(String name) {
+	public static Boolean isLibraryExist(String name) {
 		try {
 	        if (!RemoteMethodServer.ServerFlag) {
-	            	return (boolean)RemoteMethodServer.getDefault().invoke("isLibraryExist", LibraryUtil.class.getName(), null,
+	            	return (Boolean)RemoteMethodServer.getDefault().invoke("isLibraryExist", LibraryUtil.class.getName(), null,
 	            			new Class[] { String.class }, new Object[] { name });
 	        } else {
 	        	boolean flag = false;
